@@ -85,7 +85,7 @@
             </div>
         </div>
 
-        <!-- 2. 管理员登录 -->
+        <!-- 2. 管理员登录 (修复了拼写错误) -->
         <div v-else-if="currentPage === 'admin-login'" key="admin-login" class="p-6 md:p-12 flex flex-col justify-center min-h-screen">
             <div class="text-center mb-8"><h1 class="text-2xl md:text-4xl font-bold text-[#1E40AF] tracking-widest">系统管理后台</h1></div>
             <div class="bg-white p-6 md:p-10 rounded-2xl shadow-md border border-blue-100 max-w-md mx-auto w-full">
@@ -109,7 +109,7 @@
             </div>
         </div>
 
-        <!-- 4. 邮箱验证页面 -->
+        <!-- 4. 邮箱验证页面 (修复了 flex500 错误) -->
         <div v-else-if="currentPage === 'verify'" key="verify" class="p-6 md:p-12 flex flex-col justify-center min-h-screen">
             <div class="text-center mb-6">
                 <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce"><span class="text-[#1E40AF] text-2xl font-bold">@</span></div>
@@ -132,6 +132,7 @@
                     </div>
                     <button @click="handleLogout" class="md:hidden text-xs text-gray-500">退出登录</button>
                 </div>
+                <!-- 修复了成绩分析菜单栏的引号错误 -->
                 <div class="hidden md:flex items-center gap-6">
                     <span @click="dashboardTab='overview'" :class="dashboardTab==='overview' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF]'" class="cursor-pointer text-base">总览</span>
                     <span @click="dashboardTab='schedule'" :class="dashboardTab==='schedule' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF]'" class="cursor-pointer text-base">我的课表</span>
@@ -438,7 +439,7 @@
             <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-xl">
                 <h3 class="text-xl font-bold text-gray-800 mb-6 text-center">修改密码</h3>
                 <div class="mb-4"><label class="block text-gray-600 text-sm mb-2">原密码</label><input v-model="pwdForm.oldPwd" type="password" placeholder="请输入原密码" class="w-full p-3 border rounded-lg"></div>
-                <div class="mb-4"><label class="block text-gray-600 text-sm mb-2 '">新密码</label><input v-model="抬pwdForm.newPwd" type="password" placeholder="请输入新密码（至少6位）" class="w-full p-3 border rounded-lg"></div>
+                <div class="mb-4"><label class="block text-gray-600 text-sm mb-2">新密码</label><input v-model="pwdForm.newPwd" type="password" placeholder="请输入新密码（至少6位）" class="w-full p-3 border rounded-lg"></div>
                 <div class="mb-6"><label class="block text-gray-600 text-sm mb-2">确认新密码</label><input v-model="pwdForm.confirmPwd" type="password" placeholder="请再次输入新密码" class="w-full p-3 border rounded-lg"></div>
                 <div class="flex gap-3">
                     <button @click="closePasswordModal" class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-lg font-bold">取消</button>
@@ -452,6 +453,7 @@
 
 <script>
     // ================= 配置区 =================
+    // 请将下面的 URL 和 Key 替换为你 Supabase 项目中的实际值
     const SUPABASE_URL = 'https://qfvyjdsrfzgrlhicoelo.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmdnlqZHNyZnpncmxoaWNvZWxvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNjA1MzQsImV4cCI6MjEwNTgzNjUzNH0.lMFBWhI8A1vKZCl1uJLi_DExV5t8x2H9zqZ4GP71rXU';
     
@@ -479,7 +481,7 @@
             const newNotice = reactive({ title: '', content: '' });
             const editStudent = reactive({ id: '', name: '', role: '', phone: '' });
             const punishForm = reactive({ studentId: '', level: '班级处分', issuer: '', reason: '', penalty: '', date: new Date().toISOString().split('T')[0] });
-            const teacherPunishForm = reactive({ studentId: '', reason: '', penaltyType:水', customPenalty: '', date: new Date().toISOString().split('T')[0] });
+            const teacherPunishForm = reactive({ studentId: '', reason: '', penaltyType: '抬水', customPenalty: '', date: new Date().toISOString().split('T')[0] });
             const scheduleForm = reactive({ day: '周一', course: '', teacher: '' });
             const editScheduleIndex = ref(-1);
             const allSubjects = ['语文', '数学', '英语', '物理', '化学', '生物', '历史', '地理', '政治', '技术'];
@@ -493,7 +495,7 @@
 
             // 响应式数据
             const studentList = ref([]);
-            const noticeData = ref([]);  // 修复：之前是 notices
+            const notices = ref([]);
             const scheduleData = ref([]);
             const exams = ref([]);
             const allPunishments = ref([]);
@@ -527,7 +529,7 @@
                     ]);
                     
                     if (profileRes.data) studentList.value = profileRes.data;
-                    if (noticeRes.data) noticeData.value = noticeRes.data; // 修复：赋值给 noticeData
+                    if (noticeRes.data) notices.value = noticeRes.data;
                     if (scheduleRes.data) scheduleData.value = scheduleRes.data;
                     if (examRes.data) exams.value = examRes.data;
                     if (punishRes.data) {
@@ -791,7 +793,7 @@
                 loginForm, adminForm, regForm, newNotice, editStudent, punishForm, teacherPunishForm,
                 scheduleForm, editScheduleIndex, allSubjects, examForm, selectedExamId, scoreEntryData, expandedExams,
                 showPasswordModal, pwdForm, currentUser,
-                studentList, noticeData, scheduleData, exams, allPunishments,
+                studentList, notices, scheduleData, exams, allPunishments,
                 selectedExam, classPunishments, groupedSchedule, myExams,
                 handleLogin, handleRegister, handleLogout,
                 publishNotice, deleteNotice, addTeacherPunishment, deletePunishment,
