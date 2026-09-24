@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>桐乡市凤鸣高级中学工作台</title>
+    <!-- 引入 Supabase JS 和 Excel 解析库 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -13,40 +15,31 @@
         .watermark-container { position: absolute; inset: 0; pointer-events: none; opacity: 0.08; display: flex; flex-wrap: wrap; gap: 15px; overflow: hidden; justify-content: center; align-items: center; transform: rotate(-15deg); }
         .watermark-text { white-space: nowrap; font-size: 10px; color: white; font-weight: bold; }
         [v-cloak] { display: none; }
-        
         .page-fade-enter-active, .page-fade-leave-active { transition: opacity 0.3s ease, transform 0.3s ease; }
         .page-fade-enter-from { opacity: 0; transform: translateY(15px); }
         .page-fade-leave-to { opacity: 0; transform: translateY(-15px); }
-
         .slide-fade-enter-active { transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
         .slide-fade-leave-active { transition: all 0.2s cubic-bezier(0.5, 0, 0.5, 1); }
         .slide-fade-enter-from { transform: translateX(30px); opacity: 0; }
         .slide-fade-leave-to { transform: translateX(-30px); opacity: 0; }
-
         .tab-slide-enter-active { transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1); }
         .tab-slide-leave-active { transition: all 0.25s cubic-bezier(0.5, 0, 0.5, 1); }
         .tab-slide-enter-from { opacity: 0; transform: translateX(25px); }
         .tab-slide-leave-to { opacity: 0; transform: translateX(-25px); }
-
-        #error-overlay {
-            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(255, 255, 255, 0.95); z-index: 9999;
-            flex-direction: column; justify-content: center; align-items: center; padding: 20px; text-align: center;
-        }
+        #error-overlay { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; padding: 20px; text-align: center; }
     </style>
 </head>
 <body class="min-h-screen flex justify-center">
 
 <div id="error-overlay">
     <h2 class="text-xl font-bold text-red-600 mb-2">加载失败</h2>
-    <p class="text-gray-600 text-sm mb-4">可能是网络不稳定或本地缓存冲突，请尝试：<br>1. 刷新页面<br>2. 清除浏览器缓存<br>3. 切换网络重试</p>
+    <p class="text-gray-600 text-sm mb-4">可能网络不稳定或本地缓存冲突，请刷新重试。</p>
     <button onclick="location.reload()" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold">刷新页面</button>
 </div>
 
 <div id="app" v-cloak class="w-full max-w-md md:max-w-5xl lg:max-w-6xl mx-auto bg-[#F8FAFC] min-h-screen md:min-h-[90vh] md:my-6 md:rounded-3xl relative shadow-2xl flex flex-col overflow-x-hidden transition-all duration-500">
     
     <Transition name="page-fade" mode="out-in">
-        
         <!-- 1. 登录页面 -->
         <div v-if="currentPage === 'login'" key="login" class="relative min-h-screen md:min-h-[90vh] flex flex-col w-full">
             <header class="sticky top-0 z-50 w-full bg-white/70 backdrop-blur-md border-b border-white/50 shadow-sm px-6 py-4 flex justify-center items-center h-16 md:h-20 transition-all duration-300">
@@ -67,87 +60,66 @@
                 <div class="w-full md:w-1/2 flex items-center justify-center p-6 md:p-12 bg-white/50 relative">
                     <div class="w-full max-w-md bg-white/90 backdrop-blur-xl p-8 rounded-3xl shadow-xl border border-white/60 transition-all duration-300 hover:shadow-2xl">
                         <div class="relative flex justify-around mb-6 border-b pb-2">
-                            <span @click="userType='student'" :class="userType==='student' ? 'text-[#1E40AF] font-bold' : 'text-gray-400 hover:text-[#1E40AF]'" class="cursor-pointer transition-all duration-300 z-10 w-1/2 text-center text-sm md:text-base">学生端</span>
-                            <span @click="userType='teacher'" :class="userType==='teacher' ? 'text-[#1E40AF] font-bold' : 'text-gray-400 hover:text-[#1E40AF]'" class="cursor-pointer transition-all duration-300 z-10 w-1/2 text-center text-sm md:text-base">教师端</span>
-                            <div class="absolute bottom-0 h-0.5 bg-[#1E40AF] transition-all duration-300 ease-in-out" :style="{ left: userType === 'student' ? '0%' : '50%', width: '50%' }"></div>
+                            <span @click="userType='student'" :class="userType==='student' ? 'text-[#1E40AF] font-bold' : 'text-gray-400'" class="cursor-pointer transition-all duration-300 z-10 w-1/2 text-center text-sm md:text-base">学生端</span>
+                            <span @click="userType='teacher'" :class="userType==='teacher' ? 'text-[#1E40AF] font-bold' : 'text-gray-400'" class="cursor-pointer transition-all duration-300 z-10 w-1/2 text-center text-sm md:text-base">教师端</span>
+                            <div class="absolute bottom-0 h-0.5 bg-[#1E40AF] transition-all duration-300" :style="{ left: userType === 'student' ? '0%' : '50%', width: '50%' }"></div>
                         </div>
-                        <Transition name="slide-fade" mode="out-in">
-                            <div :key="userType" class="w-full">
-                                <h2 class="text-xl font-bold text-gray-800 mb-6 text-center">{{ userType === 'student' ? '学生登录' : '教师登录' }}</h2>
-                                <div class="mb-4">
-                                    <label class="block text-gray-600 text-sm mb-2">账号</label>
-                                    <input v-model="loginForm.username" type="text" placeholder="请输入学号/工号" class="w-full p-3 border border-gray-300 rounded-lg transition-all duration-300 focus:outline-none focus:border-[#1E40AF] focus:ring-2 focus:ring-blue-200">
-                                </div>
-                                <div class="mb-6">
-                                    <label class="block text-gray-600 text-sm mb-2">密码</label>
-                                    <input v-model="loginForm.password" type="password" placeholder="请输入密码" class="w-full p-3 border border-gray-300 rounded-lg transition-all duration-300 focus:outline-none focus:border-[#1E40AF] focus:ring-2 focus:ring-blue-200">
-                                </div>
-                                <button @click="handleLogin" class="w-full bg-[#1E40AF] text-white py-3 rounded-lg font-bold transition-all duration-300 hover:bg-blue-800 active:scale-[0.98] shadow-md hover:shadow-lg mb-4">登录工作台</button>
-                                <div class="text-center text-sm mb-4" v-if="userType === 'student'">
-                                    <span class="text-gray-500">还没有账号？</span>
-                                    <button @click="currentPage = 'register'" class="text-[#1E40AF] font-bold ml-1 transition-all duration-300 hover:text-blue-700">立即注册</button>
-                                </div>
-                                <div v-else class="text-center text-sm mb-4 text-gray-400 h-5"></div>
-                            </div>
-                        </Transition>
+                        <h2 class="text-xl font-bold text-gray-800 mb-6 text-center">{{ userType === 'student' ? '学生登录' : '教师登录' }}</h2>
+                        <div class="mb-4">
+                            <label class="block text-gray-600 text-sm mb-2">账号</label>
+                            <input v-model="loginForm.username" type="text" placeholder="请输入学号/工号" class="w-full p-3 border rounded-lg focus:outline-none focus:border-[#1E40AF] focus:ring-2 focus:ring-blue-200">
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-gray-600 text-sm mb-2">密码</label>
+                            <input v-model="loginForm.password" type="password" placeholder="请输入密码" class="w-full p-3 border rounded-lg focus:outline-none focus:border-[#1E40AF] focus:ring-2 focus:ring-blue-200">
+                        </div>
+                        <button @click="handleLogin" :disabled="isLoading" class="w-full bg-[#1E40AF] text-white py-3 rounded-lg font-bold transition-all duration-300 hover:bg-blue-800 active:scale-[0.98] shadow-md mb-4 disabled:opacity-50">{{ isLoading ? '登录中...' : '登录工作台' }}</button>
+                        <div class="text-center text-sm mb-4" v-if="userType === 'student'">
+                            <span class="text-gray-500">还没有账号？</span>
+                            <button @click="currentPage = 'register'" class="text-[#1E40AF] font-bold ml-1 hover:text-blue-700">立即注册</button>
+                        </div>
                         <div class="text-center text-sm pt-4 border-t border-gray-100">
-                            <button @click="currentPage = 'admin-login'" class="text-gray-400 font-bold transition-all duration-300 hover:text-[#1E40AF] text-xs">🔑 管理员登录</button>
+                            <button @click="currentPage = 'admin-login'" class="text-gray-400 font-bold text-xs hover:text-[#1E40AF]">🔑 管理员登录</button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 2. 管理员登录 -->
-        <div v-else-if="currentPage === 'admin-login'" key="admin-login" class="p-6 md:p-12 flex flex-col justify-center min-h-screen md:min-h-[90vh]">
-            <div class="text-center mb-8">
-                <h1 class="text-2xl md:text-4xl font-bold text-[#1E40AF] tracking-widest mb-2">系统管理后台</h1>
-            </div>
-            <div class="bg-white p-6 md:p-10 rounded-2xl shadow-md border border-blue-100 transition-all duration-300 hover:shadow-lg max-w-md mx-auto w-full">
-                <div class="mb-4">
-                    <label class="block text-gray-600 text-sm mb-2">管理员账号</label>
-                    <input v-model="adminForm.username" type="text" placeholder="请输入管理员账号" class="w-full p-3 border border-gray-300 rounded-lg transition-all duration-300 focus:outline-none focus:border-[#1E40AF] focus:ring-2 focus:ring-blue-200">
-                </div>
-                <div class="mb-6">
-                    <label class="block text-gray-600 text-sm mb-2">密码</label>
-                    <input v-model="adminForm.password" type="password" placeholder="请输入密码" class="w-full p-3 border border-gray-300 rounded-lg transition-all duration-300 focus:outline-none focus:border-[#1E40AF] focus:ring-2 focus:ring-blue-200">
-                </div>
-                <button @click="handleAdminLogin" class="w-full bg-[#1E40AF] text-white py-3 rounded-lg font-bold transition-all duration-300 hover:bg-blue-800 active:scale-[0.98] shadow-md hover:shadow-lg mb-4">登录后台</button>
-                <div class="text-center text-sm"><button @click="currentPage = 'login'" class="text-[#1E40AF] font-bold transition-all duration-300 hover:text-blue-700">返回登录</button></div>
+        <!-- 2. 管理员登录 (暂保持逻辑，后续可升级) -->
+        <div v-else-if="currentPage === 'admin-login'" key="admin-login" class="p-6 md:p-12 flex flex-col justify-center min-h-screen">
+            <div class="text-center mb-8"><h1 class="text-2xl md:text-4xl font-bold text-[#1E40AF] tracking-widest">系统管理后台</h1></div>
+            <div class="bg-white p-6 md:p-10 rounded-2xl shadow-md border border-blue-100 max-w-md mx-auto w-full">
+                <div class="mb-4"><label class="block text-gray-600 text-sm mb-2">管理员账号</label><input v-model="adminForm.username" type="text" placeholder="请输入管理员账号" class="w-full p-3 border rounded-lg focus:border-[#1E40AF]"></div>
+                <div class="mb-6"><label class="block text-gray-600 text-sm mb-2">密码</label><input v-model="adminForm.password" type="password" placeholder="请输入密码" class="w-full p-3 border rounded-lg focus:border-[#1E40AF]"></div>
+                <button @click="handleAdminLogin" class="w-full bg-[# :1E40AF] text-white py-3 rounded-lg font-bold ' hover:bg-blue-800 mb-4">text登录后台</button>
+                <div class="text-gray-center text-sm"><button @click="currentPage = 'login'" class="-text-[#1E40AF] font-bold">返回登录</button></div>
             </div>
         </div>
 
         <!-- 3. 注册页面 -->
-        <div v-else-if="currentPage === 'register'" key="register" class="p-6 md:p-12 flex flex-col justify-center min-h-screen md:min-h-[90vh]">
-            <div class="text-center mb-6">
-                <h1 class="text-2xl md:text-4xl font-bold text-[#1E40AF] tracking-wider">凤鸣高中 2026级 新生注册</h1>
-            </div>
-            <div class="bg-white p-6 md:p-10 rounded-2xl shadow-md border border-blue-100 transition-all duration-300 hover:shadow-lg max-w-md mx-auto w-full">
-                <div class="mb-4"><label class="block text-gray-600 text-sm mb-2">真实姓名</label><input v-model="regForm.name" type="text" class="w-full p-3 border border-gray-300 rounded-lg transition-all duration-300 focus:outline-none focus:border-[#1E40AF] focus:ring-2 focus:ring-blue-200"></div>
-                <div class="mb-4"><label class="block text-gray-600 text-sm mb-2">学号</label><input v-model="regForm.id" type="text" class="w-full p-3 border border-gray-300 rounded-lg transition-all duration-300 focus:outline-none focus:border-[#1E40AF] focus:ring-2 focus:ring-blue-200"></div>
-                <div class="mb-4"><label class="block text-gray-600 text-sm mb-2">班级</label><input value="高一二班" readonly class="w-full p-3 border border-gray-200 bg-gray-50 rounded-lg text-gray-500"></div>
-                <div class="mb-6"><label class="block text-gray-600 text-sm mb-2">电子邮箱</label><input v-model="regForm.email" type="email" placeholder="用于接收验证码" class="w-full p-3 border border-gray-300 rounded-lg transition-all duration-300 focus:outline-none focus:border-[#1E40AF] focus:ring-2 focus:ring-blue-200"></div>
-                <button @click="handleRegister" class="w-full bg-[#1E40AF] text-white py-3 rounded-lg font-bold transition-all duration-300 hover:bg-blue-800 active:scale-[0.98] shadow-md hover:shadow-lg mb-4">注册并发送验证邮件</button>
-                <div class="text-center text-sm"><button @click="currentPage = 'login'" class="text-[#1E40AF] font-bold transition-all duration-300 hover:text-blue-700">返回登录</button></div>
+        <div v-else-if="currentPage === 'register'" key="register" class="p-6 md:p-12 flex flex-col justify-center min-h-screen">
+            <div class="text-center mb-6"><h1 class="text-2xl md:text-4xl font-bold text-[#1E40AF]">凤鸣高中 2026级 新生注册</h1></div>
+            <div class="bg-white p-6 md:p-10 rounded-2xl shadow-md border border-blue-100 max-w-md mx-auto w-full">
+                <div class="mb-4"><label class="block text-gray-600 text-sm mb-2">真实姓名</label><input v-model="regForm.name" type="text" class="w-full p-3 border rounded-lg focus:border-[#1E40AF]"></div>
+                <div class="mb-4"><label class="block text-gray-600 text-sm mb-2">学号</label><input v-model="regForm.id" type="text" class="w-full p-3 border rounded-lg focus:border-[#1E40AF]"></div>
+                <div class="mb-4"><label class="block text-gray-600 text-sm mb-2">班级</label><input value="高一二班" readonly class="w-full p-3 border bg-gray-50 rounded-lg text-gray-500"></div>
+                <div class="mb-6"><label class="block text-gray-600 text-sm mb-2">电子邮箱</label><input v-model="regForm.email" type="email" placeholder="用于接收验证码" class="w-full p-3 border rounded-lg focus:border-[#1E40AF]"></div>
+                <button @click="handleRegister" :disabled="isLoading" class="w-full bg-[#1E40AF] text-white py-3 rounded-lg font-bold hover:bg-blue-800 mb-4 disabled:opacity-50">{{ isLoading ? '注册中...' : '注册并发送验证邮件' }}</button>
+                <div class="text-center text-sm"><button @click="currentPage = 'login'" class="text-[#1E40AF] font-bold">返回登录</button></div>
             </div>
         </div>
 
-        <!-- 4. 邮箱验证页面 -->
-        <div v-else-if="currentPage === 'verify'" key="verify" class="p-6 md:p-12 flex flex-col justify-center min-h-screen md:min-h-[90vh]">
+        <!-- 4. 邮箱验证页面 (Supabase 注册后需要去邮箱点链接，所以这个页面提示去邮箱) -->
+        <div v-else-if="currentPage === 'verify'" key="verify" class="p-6 md:p-12 flex500 flex-col justify-center min-h-screen">
             <div class="text-center mb-6">
                 <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce"><span class="text-[#1E40AF] text-2xl font-bold">@</span></div>
                 <h2 class="text-xl font-bold text-gray-800">验证您的邮箱</h2>
-                <p class="text-sm text-gray-500 mt-2">验证码已发送至 {{ regForm.email }}</p>
+                <p class="text-sm text-gray-500 mt-2">验证邮件已发送至 {{ regForm.email }}</p>
+                <p class="text-xs text-red-500 mt-4">请前往您的邮箱点击验证链接，完成后返回此处登录！</p>
             </div>
-            <div class="bg-white p-6 md:p-10 rounded-2xl shadow-md border border-blue-100 transition-all duration-300 hover:shadow-lg max-w-md mx-auto w-full">
-                <div class="mb-4">
-                    <label class="block text-gray-600 text-sm mb-2">验证码</label>
-                    <div class="flex gap-2">
-                        <input v-model="verifyCodeInput" type="text" placeholder="请输入6位验证码" class="flex-1 p-3 border border-gray-300 rounded-lg transition-all duration-300 focus:outline-none focus:border-[#1E40AF] focus:ring-2 focus:ring-blue-200">
-                        <button @click="simulateSendCode" class="bg-gray-100 text-[#1E40AF] px-4 rounded-lg font-bold text-sm border border-gray-200 transition-all duration-300 hover:bg-gray-200 active:scale-[0.98]">获取验证码</button>
-                    </div>
-                </div>
-                <button @click="handleVerify" class="w-full bg-[#1E40AF] text-white py-3 rounded-lg font-bold transition-all duration-300 hover:bg-blue-800 active:scale-[0.98] shadow-md hover:shadow-lg">完成验证</button>
+            <div class="bg-white p-6 rounded-2xl shadow-md border border-blue-100 max-w-md mx-auto w-full text-center">
+                <button @click="currentPage = 'login'" class="w-full bg-[#1E40AF] text-white py-3 rounded-lg font-bold hover:bg-blue-800">返回登录</button>
             </div>
         </div>
 
@@ -156,75 +128,72 @@
             <div class="bg-white px-4 py-3 md:px-8 md:py-4 flex flex-col md:flex-row justify-between items-center border-b border-gray-100 shadow-sm sticky top-0 z-50 md:rounded-t-3xl">
                 <div class="flex items-center gap-2 md:gap-4 w-full md:w-auto justify-between md:justify-start">
                     <div class="flex items-center gap-2">
-                        <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-[#1E40AF] flex items-center justify-center text-white text-xs md:text-base font-bold">凤</div>
-                        <div>
-                            <h1 class="text-[#1E40AF] font-bold text-sm md:text-lg leading-tight">桐乡市凤鸣高级中学</h1>
-                            <p class="text-[10px] md:text-xs text-gray-400 tracking-wider">FENG MING HIGH SCHOOL</p>
-                        </div>
+                        <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-[#1E40AF] flex items-center justify-center text-white text-xs font-bold">凤</div>
+                        <div><h1 class="text-[#1E40AF] font-bold text-sm md:text-lg leading-tight">桐乡市凤鸣高级中学</h1><p class="text-[10px] text-gray-400">FENG MING HIGH SCHOOL</p></div>
                     </div>
-                    <button @click="handleLogout" class="md:hidden text-xs text-gray-500 transition-all duration-300 hover:text-[#1E40AF]">退出登录</button>
+                    <button @click="handleLogout" class="md:hidden text-xs text-gray-500">退出登录</button>
                 </div>
-                <div class="hidden md:flex items-center gap-6 mt-0">
-                    <span @click="dashboardTab='overview'" :class="dashboardTab==='overview' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF] transition-all duration-300'" class="cursor-pointer text-base">总览</span>
-                    <span @click="dashboardTab='schedule'" :class="dashboardTab==='schedule' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF] transition-all duration-300'" class="cursor-pointer text-base">我的课表</span>
-                    <span @click="dashboardTab='grades'" :class="dashboardTab==='grades' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF] transition-all duration-300'" class="cursor-pointer text-base">成绩分析</span>
-                    <span @click="dashboardTab='notices'" :class="dashboardTab==='notices' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF] transition-all duration-300'" class="cursor-pointer text-base relative">通知中心</span>
-                    <span @click="dashboardTab='punishments'" :class="dashboardTab==='punishments' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF] transition-all duration-300'" class="cursor-pointer text-base">个人处分</span>
+                <div class="hidden md:flex items-center gap-6">
+                    <span @click="dashboardTab='overview'" :class="dashboardTab==='overview' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF]'" class="cursor-pointer text-base">总览</span>
+                    <span @click="dashboardTab='schedule'" :class="dashboardTab==='schedule' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF]'" class="cursor-pointer text-base">我的课表</span>
+                    <span @click="dashboardTab='grades'" :class="dashboardTab==='grades' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' hover:text-[#1E40AF]'" class="cursor-pointer text-base">成绩分析</span>
+                    <span @click="dashboardTab='notices'" :class="dashboardTab==='notices' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF]'" class="cursor-pointer text-base">通知中心</span>
+                    <span @click="dashboardTab='punishments'" :class="dashboardTab==='punishments' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF]'" class="cursor-pointer text-base">个人处分</span>
                 </div>
-                <button @click="handleLogout" class="hidden md:block text-sm text-gray-500 transition-all duration-300 hover:text-[#1E40AF]">退出登录</button>
+                <button @click="handleLogout" class="hidden md:block text-sm text-gray-500 hover:text-[#1E40AF]">退出登录</button>
             </div>
 
+            <!-- 手机端导航 -->
             <div class="bg-white flex justify-between px-2 py-3 text-xs shadow-sm mb-2 sticky top-[53px] z-40 md:hidden">
-                <span @click="dashboardTab='overview'" :class="dashboardTab==='overview' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 border-b-2 border-transparent pb-1'" class="cursor-pointer transition-all duration-300 px-1">总览</span>
-                <span @click="dashboardTab='schedule'" :class="dashboardTab==='schedule' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 border-b-2 border-transparent pb-1'" class="cursor-pointer transition-all duration-300 px-1">我的课表</span>
-                <span @click="dashboardTab='grades'" :class="dashboardTab==='grades' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 border-b-2 border-transparent pb-1'" class="cursor-pointer transition-all duration-300 px-1">成绩分析</span>
-                <span @click="dashboardTab='notices'" :class="dashboardTab==='notices' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 border-b-2 border-transparent pb-1'" class="cursor-pointer transition-all duration-300 px-1 relative">通知中心</span>
-                <span @click="dashboardTab='punishments'" :class="dashboardTab==='punishments' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 border-b-2 border-transparent pb-1'" class="cursor-pointer transition-all duration-300 px-1">个人处分</span>
+                <span @click="dashboardTab='overview'" :class="dashboardTab==='overview' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 border-b-2 border-transparent pb-1'" class="cursor-pointer px-1">总览</span>
+                <span @click="dashboardTab='schedule'" :class="dashboardTab==='schedule' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 border-b-2 border-transparent pb-1'" class="cursor-pointer px-1">我的课表</span>
+                <span @click="dashboardTab='grades'" :class="dashboardTab==='grades' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 border-b-2 border-transparent pb-1'" class="cursor-pointer px-1">成绩分析</span>
+                <span @click="dashboardTab='notices'" :class="dashboardTab==='notices' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 border-b-2 border-transparent pb-1'" class="cursor-pointer px-1 relative">通知中心</span>
+                <span @click="dashboardTab='punishments'" :class="dashboardTab==='punishments' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 border-b-2 border-transparent pb-1'" class="cursor-pointer px-1">个人处分</span>
             </div>
 
             <Transition name="tab-slide" mode="out-in">
+                <!-- 总览 -->
                 <div v-if="dashboardTab === 'overview'" key="overview" class="px-4 md:px-8">
                     <div class="flex flex-col md:flex-row gap-4 my-4 md:my-6">
-                        <div class="w-full md:w-2/3 p-6 bg-[#1E40AF] rounded-2xl text-white relative overflow-hidden shadow-lg transition-transform duration-300 hover:scale-[1.01]">
+                        <div class="w-full md:w-2/3 p-6 bg-[#1E40AF] rounded-2xl text-white relative overflow-hidden shadow-lg">
                             <div class="flex justify-between items-start mb-6 relative z-10">
-                                <div>
-                                    <p class="text-xs opacity-80 mb-1">欢迎回来</p>
-                                    <h2 class="text-2xl font-bold tracking-wide">{{ currentUser.name }}，欢迎回来</h2>
-                                </div>
-                                <button @click="showUpdateInfoTip" class="bg-white text-[#1E40AF] px-3 py-1.5 rounded text-xs font-bold shadow-sm transition-all duration-300 active:scale-95 hover:bg-gray-100">更新资料</button>
+                                <div><p class="text-xs opacity-80 mb-1">欢迎回来</p><h2 class="text-2xl font-bold">{{ currentUser.name }}，欢迎回来</h2></div>
+                                <button @click="showUpdateInfoTip" class="bg-white text-[#1E40AF] px-3 py-1.5 rounded text-xs font-bold active:scale-95">更新资料</button>
                             </div>
-                            <div class="grid grid-cols-2 gap-y-5 gap-x-2 text-sm relative z-10">
-                                <div><p class="opacity-70 mb-1 text-xs">学号</p><p class="text-base font-medium">{{ currentUser.id }}</p></div>
-                                <div><p class="opacity-70 mb-1 text-xs">班级</p><p class="text-base font-medium">{{ currentUser.className }}</p></div>
-                                <div><p class="opacity-70 mb-1 text-xs">班级职务</p><p class="text-base font-medium">{{ currentUser.role }}</p></div>
-                                <div><p class="opacity-70 mb-1 text-xs">本人电话</p><p class="text-base font-medium">{{ currentUser.phone }}</p></div>
+                            <div class="grid grid-cols-2 gap-y-5 text-sm relative z-10">
+                                <div><p class="opacity-70 text-xs">学号</p><p class="text-base font-medium">{{ currentUser.student_id }}</p></div>
+                                <div><p class="opacity-70 text-xs">班级</p><p class="text-base font-medium">{{ currentUser.class_name }}</p></div>
+                                <div><p class="opacity-70 text-xs">班级职务</p><p class="text-base font-medium">{{ currentUser.role }}</p></div>
+                                <div><p class="opacity-70 text-xs">本人电话</p><p class="text-base font-medium">{{ currentUser.phone }}</p></div>
                             </div>
                             <div class="watermark-container">
-                                <span v-for="n in 30" :key="n" class="watermark-text">{{ currentUser.name }} · {{ currentUser.role }} · {{ currentUser.id }} · 仅限本人使用</span>
+                                <span v-for="n in 30" :key="n" class="watermark-text">{{ currentUser.name }} · {{ currentUser.role }} · {{ currentUser.student_id }} · 仅限本人使用</span>
                             </div>
                         </div>
                         <div class="w-full md:w-1/3 bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-center">
                             <h3 class="text-lg font-bold text-gray-800 mb-4 border-l-4 border-[#1E40AF] pl-2">安全设置</h3>
-                            <button @click="openPasswordModal" class="w-full bg-white border border-[#1E40AF] text-[#1E40AF] py-3 rounded-lg font-bold transition-all duration-300 hover:bg-blue-50 active:scale-[0.98]">修改密码</button>
+                            <button @click="openPasswordModal" class="w-full bg-white border border-[#1E40AF] text-[#1E40AF] py-3 rounded-lg font-bold hover:bg-blue-50">修改密码</button>
                         </div>
                     </div>
                 </div>
 
+                <!-- 课表 -->
                 <div v-else-if="dashboardTab === 'schedule'" key="schedule" class="m-4 md:my-6 md:px-8">
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                         <h3 class="text-lg font-bold text-gray-800 mb-4 border-l-4 border-[#1E40AF] pl-2">本周课表（高一二班）</h3>
                         <div class="md:hidden space-y-3">
-                            <div v-for="(item, index) in scheduleData" :key="index" class="flex bg-gray-50 rounded-lg p-3 text-sm items-center transition-all duration-300 hover:bg-blue-50">
+                            <div v-for="(item, index) in scheduleData" :key="index" class="flex bg-gray-50 rounded-lg p-3 text-sm items-center">
                                 <div class="w-16 font-bold text-[#1E40AF]">{{ item.day }}</div>
                                 <div class="flex-1 text-gray-700">{{ item.course }}</div>
                                 <div class="w-16 text-right text-gray-500 text-xs">{{ item.teacher }}</div>
                             </div>
                         </div>
                         <div class="hidden md:grid grid-cols-7 gap-2">
-                            <div v-for="(courses, day) in groupedSchedule" :key="day" class="bg-gray-50 rounded-lg p-3 border border-gray-100 transition-all duration-300 hover:shadow-md">
+                            <div v-for="(courses, day) in groupedSchedule" :key="day" class="bg-gray-50 rounded-lg p-3 border border-gray-100">
                                 <div class="font-bold text-[#1E40AF] text-center mb-3 pb-2 border-b border-gray-200">{{ day }}</div>
                                 <div v-if="courses.length > 0" class="space-y-2">
-                                    <div v-for="(course, idx) in courses" :key="idx" class="bg-white rounded p-2 text-xs text-center border border-gray-100 shadow-sm transition-all duration-300 hover:bg-blue-50">
+                                    <div v-for="(course, idx) in courses" :key="idx" class="bg-white rounded p-2 text-xs text-center border border-gray-100">
                                         <div class="font-bold text-gray-800">{{ course.course }}</div>
                                         <div class="text-gray-500 text-[10px] mt-1">{{ course.teacher }}</div>
                                     </div>
@@ -236,16 +205,17 @@
                     </div>
                 </div>
 
+                <!-- 成绩 -->
                 <div v-else-if="dashboardTab === 'grades'" key="grades" class="m-4 md:my-6 md:px-8 space-y-4">
                     <h3 class="text-lg font-bold text-gray-800 mb-4 border-l-4 border-[#1E40AF] pl-2">我的成绩</h3>
                     <div v-if="myExams.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div v-for="exam in myExams" :key="exam.id" class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md">
+                        <div v-for="exam in myExams" :key="exam.id" class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                             <div class="flex justify-between items-start mb-2">
                                 <span class="text-xs font-bold px-2 py-0.5 bg-blue-100 text-[#1E40AF] rounded">{{ exam.date }}</span>
                                 <span class="text-xs text-gray-400">{{ exam.subjects.length }} 科</span>
                             </div>
                             <h4 class="font-bold text-gray-800 mb-3">{{ exam.name }}</h4>
-                            <button @click="toggleExamExpand(exam.id)" class="w-full text-sm text-[#1E40AF] font-bold border border-[#1E40AF] py-2 rounded-lg transition-all duration-300 hover:bg-blue-50 mb-2 active:scale-[0.98]">
+                            <button @click="toggleExamExpand(exam.id)" class="w-full text-sm text-[#1E40AF] font-bold border border-[#1E40AF] py-2 rounded-lg hover:bg-blue-50 mb-2">
                                 {{ expandedExams[exam.id] ? '收起成绩' : '查看详细成绩' }}
                             </button>
                             <Transition name="tab-slide">
@@ -258,16 +228,14 @@
                             </Transition>
                         </div>
                     </div>
-                    <div v-else class="bg-white p-8 rounded-xl shadow-sm border border-dashed border-gray-300 text-center text-gray-400 text-sm">
-                        暂无成绩记录
-                    </div>
+                    <div v-else class="bg-white p-8 rounded-xl shadow-sm border border-dashed border-gray-300 text-center text-gray-400 text-sm">暂无成绩记录</div>
                 </div>
 
+                <!-- 通知中心 -->
                 <div v-else-if="dashboardTab === 'notices'" key="notices" class="m-4 md:my-6 md:px-8 space-y-3">
                     <div v-if="noticeData.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div v-for="(item, index) in noticeData" :key="index" class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md3">
->
-                            <div class="flex justify                       -between items-start mb-2">
+                        <div v-for="(item, index) in noticeData" :key="index" class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                            <div class="flex justify-between items-start mb-2">
                                 <span class="text-xs font-bold px-2 py-0.5 bg-blue-100 text-[#1E40AF] rounded">{{ item.tag }}</span>
                                 <span class="text-xs text-gray-400">{{ item.date }}</span>
                             </div>
@@ -276,28 +244,25 @@
                         </div>
                     </div>
                     <div v-else class="bg-white p-8 rounded-xl shadow-sm border border-dashed border-gray-300 flex flex-col items-center justify-center text-center">
-                        <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
-                            <span class="text-2xl">📭</span>
-                        </div>
+                        <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4"><span class="text-2xl">📭</span></div>
                         <h4 class="text-gray-500 font-bold mb-1">暂无通知</h4>
                         <p class="text-gray-400 text-sm">目前还没有收到任何通知消息</p>
                     </div>
                 </div>
 
+                <!-- 个人处分 -->
                 <div v-else-if="dashboardTab === 'punishments'" key="punishments" class="m-4 md:my-6 md:px-8">
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-red-100">
                         <h3 class="text-lg font-bold text-red-600 mb-4 border-l-4 border-red-500 pl-2">个人处分记录</h3>
                         <div v-if="currentUser.punishments && currentUser.punishments.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div v-for="(item, index) in currentUser.punishments" :key="index" 
-                                 :class="item.level === '学校处分' ? 'bg-red-50 border-red-200' : 'bg-orange-50 border-orange-200'" 
-                                 class="p-3 rounded-lg border relative transition-all duration-300 hover:shadow-md">
+                            <div v-for="(item, index) in currentUser.punishments" :key="index" :class="item.level === '学校处分' ? 'bg-red-50 border-red-200' : 'bg-orange-50 border-orange-200'" class="p-3 rounded-lg border">
                                 <div class="flex justify-between items-center mb-1">
-                                    <span :class="item.level === '学校处分' ? 'text-red-700 bg-red-100' : 'text-orange-700 bg-orange-100'" class="text-xs font-bold px-2 py-0.5 rounded">{{ item.level || '班级处分' }}</span>
+                                    <span :class="item.level === '学校处分' ? 'text-red-700 bg-red-100' : 'text-orange-700 bg-orange-100'" class="text-xs font-bold px-2 py-0.5 rounded">{{ item.level }}</span>
                                     <span class="text-xs text-gray-400">{{ item.date }}</span>
                                 </div>
-                                <p :class="item.level === '学校处分' ? 'text-red-800' : 'text-orange-800'" class="text-sm font-bold mt-1">原因：{{ item.reason }}</p>
-                                <p class="text-xs text-gray-600 mt-1"><span class="font-medium">处罚措施：</span>{{ item.penalty || '未填写' }}</p>
-                                <p class="text-xs text-gray-500 mt-1">作出机构：{{ item.issuer || '班主任/班级' }}</p>
+                                <p class="text-sm font-bold mt-1">原因：{{ item.reason }}</p>
+                                <p class="text-xs text-gray-600 mt-1">处罚：{{ item.penalty }}</p>
+                                <p class="text-xs text-gray-500 mt-1">机构：{{ item.issuer }}</p>
                             </div>
                         </div>
                         <div v-else class="text-center py-8 text-gray-400 text-sm">暂无处分记录，请继续保持！</div>
@@ -306,108 +271,90 @@
             </Transition>
         </div>
 
-        <!-- 6. 教师主页 -->
+        <!-- 教师端主页 (结构与学生端类似，包含成绩管理、发布通知等) -->
         <div v-else-if="currentPage === 'teacher-dashboard'" key="teacher-dashboard" class="min-h-screen md:min-h-[90vh] pb-20 flex flex-col w-full">
             <div class="bg-white px-4 py-3 md:px-8 md:py-4 flex flex-col md:flex-row justify-between items-center border-b border-gray-100 shadow-sm sticky top-0 z-50 md:rounded-t-3xl">
                 <div class="flex items-center gap-2 md:gap-4 w-full md:w-auto justify-between md:justify-start">
                     <div class="flex items-center gap-2">
-                        <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-[#1E40AF] flex items-center justify-center text-white text-xs md:text-base font-bold">师</div>
-                        <div>
-                            <h1 class="text-[#1E40AF] font-bold text-sm md:text-lg leading-tight">桐乡市凤鸣高级中学 · 教师端</h1>
-                            <p class="text-[10px] md:text-xs text-gray-400 tracking-wider">教师工作台</p>
-                        </div>
+                        <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-[#1E40AF] flex items-center justify-center text-white text-xs font-bold">师</div>
+                        <div><h1 class="text-[#1E40AF] font-bold text-sm md:text-lg leading-tight">桐乡市凤鸣高级中学 · 教师端</h1><p class="text-[10px] text-gray-400">教师工作台</p></div>
                     </div>
-                    <button @click="handleLogout" class="md:hidden text-xs text-gray-500 transition-all duration-300 hover:text-[#1E40AF]">退出登录</button>
+                    <button @click="handleLogout" class="md:hidden text-xs text-gray-500">退出登录</button>
                 </div>
-                <div class="hidden md:flex items-center gap-6 mt-0">
-                    <span @click="teacherTab='overview'" :class="teacherTab==='overview' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF] transition-all duration-300'" class="cursor-pointer text-base">工作台</span>
-                    <span @click="teacherTab='publish'" :class="teacherTab==='publish' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF] transition-all duration-300'" class="cursor-pointer text-base">发布通知</span>
-                    <span @click="teacherTab='punish'" :class="teacherTab==='punish' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF] transition-all duration-300'" class="cursor-pointer text-base">班级处分</span>
-                    <span @click="teacherTab='students'" :class="teacherTab==='students' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF] transition-all duration-300'" class="cursor-pointer text-base">班级名册</span>
-                    <span @click="teacherTab='scores'" :class="teacherTab==='scores' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF] transition-all duration-300'" class="cursor-pointer text-base">成绩管理</span>
+                <div class="hidden md:flex items-center gap-6">
+                    <span @click="teacherTab='overview'" :class="teacherTab==='overview' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF]'" class="cursor-pointer text-base">工作台</span>
+                    <span @click="teacherTab='publish'" :class="teacherTab==='publish' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF]'" class="cursor-pointer text-base">发布通知</span>
+                    <span @click="teacherTab='punish'" :class="teacherTab==='punish' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF]'" class="cursor-pointer text-base">班级处分</span>
+                    <span @click="teacherTab='students'" :class="teacherTab==='students' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF]'" class="cursor-pointer text-base">班级名册</span>
+                    <span @click="teacherTab='scores'" :class="teacherTab==='scores' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF]'" class="cursor-pointer text-base">成绩管理</span>
                 </div>
-                <button @click="handleLogout" class="hidden md:block text-sm text-gray-500 transition-all duration-300 hover:text-[#1E40AF]">退出登录</button>
+                <button @click="handleLogout" class="hidden md:block text-sm text-gray-500 hover:text-[#1E40AF]">退出登录</button>
             </div>
 
+            <!-- 手机端教师导航 -->
             <div class="bg-white flex justify-between px-2 py-3 text-xs shadow-sm mb-2 sticky top-[53px] z-40 md:hidden overflow-x-auto">
-                <span @click="teacherTab='overview'" :class="teacherTab==='overview' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 border-b-2 border-transparent pb-1'" class="cursor-pointer transition-all duration-300 px-2 flex-shrink-0">工作台</span>
-                <span @click="teacherTab='publish'" :class="teacherTab==='publish' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 border-b-2 border-transparent pb-1'" class="cursor-pointer transition-all duration-300 px-2 flex-shrink-0">发布通知</span>
-                <span @click="teacherTab='punish'" :class="teacherTab==='punish' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 border-b-2 border-transparent pb-1'" class="cursor-pointer transition-all duration-300 px-2 flex-shrink-0">班级处分</span>
-                <span @click="teacherTab='students'" :class="teacherTab==='students' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 border-b-2 border-transparent pb-1'" class="cursor-pointer transition-all duration-300 px-2 flex-shrink-0">班级名册</span>
-                <span @click="teacherTab='scores'" :class="teacherTab==='scores' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 border-b-2 border-transparent pb-1'" class="cursor-pointer transition-all duration-300 px-2 flex-shrink-0">成绩管理</span>
+                <span @click="teacherTab='overview'" :class="teacherTab==='overview' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500'" class="cursor-pointer px-2 flex-shrink-0">工作台</span>
+                <span @click="teacherTab='publish'" :class="teacherTab==='publish' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500'" class="cursor-pointer px-2 flex-shrink-0">发布通知</span>
+                <span @click="teacherTab='punish'" :class="teacherTab==='punish' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500'" class="cursor-pointer px-2 flex-shrink-0">班级处分</span>
+                <span @click="teacherTab='students'" :class="teacherTab==='students' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500'" class="cursor-pointer px-2 flex-shrink-0">班级名册</span>
+                <span @click="teacherTab='scores'" :class="teacherTab==='scores' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500'" class="cursor-pointer px-2 flex-shrink-0">成绩管理</span>
             </div>
 
             <Transition name="tab-slide" mode="out-in">
+                <!-- 教师工作台总览 -->
                 <div v-if="teacherTab === 'overview'" key="overview" class="px-4 md:px-8">
                     <div class="flex flex-col md:flex-row gap-4 my-4 md:my-6">
-                        <div class="w-full md:w-2/3 p-6 bg-[#1E40AF] rounded-2xl text-white relative overflow-hidden shadow-lg transition-transform duration-300 hover:scale-[1.01]">
+                        <div class="w-full md:w-2/3 p-6 bg-[#1E40AF] rounded-2xl text-white relative overflow-hidden shadow-lg">
                             <div class="flex justify-between items-start mb-6 relative z-10">
-                                <div>
-                                    <p class="text-xs opacity-80 mb-1">教师欢迎回来</p>
-                                    <h2 class="text-2xl font-bold tracking-wide">{{ currentUser.name }}，您好</h2>
-                                    <p class="text-sm opacity-80 mt-2">{{ currentUser.role }} | 桐乡市凤鸣高级中学</p>
-                                </div>
-                                <button @click="showUpdateInfoTip" class="bg-white text-[#1E40AF] px-3 py-1.5 rounded text-xs font-bold shadow-sm transition-all duration-300 active:scale-95 hover:bg-gray-100">更新资料</button>
+                                <div><p class="text-xs opacity-80 mb-1">教师欢迎回来</p><h2 class="text-2xl font-bold">{{ currentUser.name }}，您好</h2><p class="text-sm opacity-80 mt-2">{{ currentUser.role }} | 桐乡市凤鸣高级中学</p></div>
+                                <button @click="showUpdateInfoTip" class="bg-white text-[#1E40AF] px-3 py-1.5 rounded text-xs font-bold">更新资料</button>
                             </div>
-                            <div class="watermark-container">
-                                <span v-for="n in 30" :key="n" class="watermark-text">{{ currentUser.name }} · {{ currentUser.role }} · 仅限教师使用</span>
-                            </div>
+                            <div class="watermark-container"><span v-for="n in 30" :key="n" class="watermark-text">{{ currentUser.name }} · {{ currentUser.role }} · 仅限教师使用</span></div>
                         </div>
                         <div class="w-full md:w-1/3 bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-center">
                             <h3 class="text-lg font-bold text-gray-800 mb-4 border-l-4 border-[#1E40AF] pl-2">安全设置</h3>
-                            <button @click="openPasswordModal" class="w-full bg-white border border-[#1E40AF] text-[#1E40AF] py-3 rounded-lg font-bold transition-all duration-300 hover:bg-blue-50 active:scale-[0.98]">修改密码</button>
+                            <button @click="openPasswordModal" class="w-full bg-white border border-[#1E40AF] text-[#1E40AF] py-3 rounded-lg font-bold hover:bg-blue-50">修改密码</button>
                         </div>
                     </div>
                 </div>
 
+                <!-- 发布通知 -->
                 <div v-else-if="teacherTab === 'publish'" key="publish" class="m-4 md:my-6 md:px-8">
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                        <h3 class="text-lg font-bold text-gray-800 mb-4 border-l-4 border-[#1E40AF] pl-2">发布班级通知</h <div class="mb-4"><input v-model="newNotice.title" type="text" placeholder="通知标题" class="w-full p-3 border border-gray-300 rounded-lg transition-all duration-300 focus:border-[#1E40AF] focus:outline-none focus:ring-2 focus:ring-blue-200"></div>
-                        <div class="mb-4"><textarea v-model="newNotice.content" rows="4" placeholder="通知内容" class="w-full p-3 border border-gray-300 rounded-lg transition-all duration-300 focus:border-[#1E40AF] focus:outline-none focus:ring-2 focus:ring-blue-200"></textarea></div>
-                        <button @click="publishNotice" class="w-full bg-[#1E40AF] text-white py-3 rounded-lg font-bold transition-all duration-300 hover:bg-blue-800 active:scale-[0.98] shadow-md">立即发布</button>
+                        <h3 class="text-lg font-bold text-gray-800 mb-4 border-l-4 border-[#1E40AF] pl-2">发布班级通知</h3>
+                        <div class="mb-4"><input v-model="newNotice.title" type="text" placeholder="通知标题" class="w-full p-3 border rounded-lg focus:border-[#1E40AF]"></div>
+                        <div class="mb-4"><textarea v-model="newNotice.content" rows="4" placeholder="通知内容" class="w-full p-3 border rounded-lg focus:border-[#1E40AF]"></textarea></div>
+                        <button @click="publishNotice" class="w-full bg-[#1E40AF] text-white py-3 rounded-lg font-bold hover:bg-blue-800">立即发布</button>
                     </div>
                 </div>
 
+                <!-- 班级处分 -->
                 <div v-else-if="teacherTab === 'punish'" key="punish" class="m-4 md:my-6 md:px-8">
                     <div class="flex flex-col md:flex-row gap-4">
                         <div class="w-full md:w-1/2 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                             <h3 class="text-lg font-bold text-gray-800 mb-4 border-l-4 border-orange-500 pl-2">录入班级处分</h3>
-                            <div class="mb-4">
-                                <select v-model="teacherPunishForm.studentId" class="w-full p-3 border border-gray-300 rounded-lg transition-all duration-300 focus:border-[#1E40AF] focus:outline-none focus:ring-2 focus:ring-blue-200 bg-white">
-                                    <option value="" disabled>请选择本班学生</option>
-                                    <option v-for="(stu, index) in studentList" :key="stu.id" :value="stu.id">{{ stu.name }} ({{ stu.id }})</option>
-                                </select>
-                            </div>
-                            <div class="mb-4">
-                                <input v-model="teacherPunishForm.reason" type="text" placeholder="处分原因（例如：迟到、未交作业等）" class="w-full p-3 border border-gray-300 rounded-lg transition-all duration-300 focus:border-[#1E40AF] focus:outline-none focus:ring-2 focus:ring-blue-200">
-                            </div>
-                            <div class="mb-4">
-                                <select v-model="teacherPunishForm.penaltyType" class="w-full p-3 border border-gray-300 rounded-lg transition-all duration-300 focus:border-[#1E40AF] focus:outline-none focus:ring-2 focus:ring-blue-200 bg-white mb-2">
-                                    <option value="抬水">抬水（男生默认）</option>
-                                    <option value="倒垃圾">倒垃圾（女生默认）</option>
-                                    <option value="自定义">自选/手动输入</option>
-                                </select>
-                                <input v-if="teacherPunishForm.penaltyType === '自定义'" v-model="teacherPunishForm.customPenalty" type="text" placeholder="请输入自定义处罚措施" class="w-full p-3 border border-gray-300 rounded-lg transition-all duration-300 focus:border-[#1E40AF] focus:outline-none focus:ring-2 focus:ring-blue-200">
-                            </div>
-                            <div class="mb-4">
-                                <input v-model="teacherPunishForm.date" type="date" class="w-full p-3 border border-gray-300 rounded-lg transition-all duration-300 focus:border-[#1E40AF] focus:outline-none focus:ring-2 focus:ring-blue-200">
-                            </div>
-                            <button @click="addTeacherPunishment" class="w-full bg-orange-600 text-white py-3 rounded-lg font-bold transition-all duration-300 hover:bg-orange-700 active:scale-[0.98] shadow-md">确认录入班级处分</button>
+                            <select v-model="teacherPunishForm.studentId" class="w-full p-3 border rounded-lg mb-4 bg-white">
+                                <option value="" disabled>请选择本班学生</option>
+                                <option v-for="stu in studentList" :key="stu.student_id" :value="stu.id">{{ stu.name }} ({{ stu.student_id }})</option>
+                            </select>
+                            <input v-model="teacherPunishForm.reason" type="text" placeholder="处分原因" class="w-full p-3 border rounded-lg mb-4">
+                            <select v-model="teacherPunishForm.penaltyType" class="w-full p-3 border rounded-lg mb-4 bg-white">
+                                <option value="抬水">抬水（男生默认）</option>
+                                <option value="倒垃圾">倒垃圾（女生默认）</option>
+                                <option value="自定义">自选/手动输入</option>
+                            </select>
+                            <input v-if="teacherPunishForm.penaltyType === '自定义'" v-model="teacherPunishForm.customPenalty" type="text" placeholder="请输入自定义处罚措施" class="w-full p-3 border rounded-lg mb-4">
+                            <input v-model="teacherPunishForm.date" type="date" class="w-full p-3 border rounded-lg mb-4">
+                            <button @click="addTeacherPunishment" class="w-full bg-orange-600 text-white py-3 rounded-lg font-bold hover:bg-orange-700">确认录入班级处分</button>
                         </div>
-
                         <div class="w-full md:w-1/2 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                             <h4 class="font-bold text-gray-800 mb-3 border-l-4 border-orange-400 pl-2">已录入的班级处分记录</h4>
                             <div v-if="classPunishments.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div v-for="item in classPunishments" :key="item.id" class="bg-orange-50 border border-orange-200 p-3 rounded-lg transition-all duration-300 hover:shadow-md">
-                                    <div class="flex justify-between items-center mb-1">
-                                        <span class="text-xs font-bold text-orange-700 bg-orange-100 px-2 py-0.5 rounded">{{ item.studentName }} ({{ item.studentId }})</span>
-                                        <span class="text-xs text-gray-500">{{ item.date }}</span>
-                                    </div>
+                                <div v-for="item in classPunishments" :key="item.id" class="bg-orange-50 border border-orange-200 p-3 rounded-lg">
+                                    <div class="flex justify-between items-center mb-1"><span class="text-xs font-bold text-orange-700 bg-orange-100 px-2 py-0.5 rounded">{{ item.studentName }} ({{ item.studentId }})</span><span class="text-xs text-gray-500">{{ item.date }}</span></div>
                                     <p class="text-sm text-orange-800 font-bold mt-1">原因：{{ item.reason }}</p>
                                     <p class="text-xs text-gray-600 mt-1">处罚：{{ item.penalty }}</p>
-                                    <div class="text-right mt-2">
-                                        <button @click="deletePunishment(item.studentId, item.recordId)" class="text-red-600 text-xs px-3 py-1 border border-red-200 bg-white rounded shadow-sm transition-all duration-300 hover:bg-red-50 active:scale-95">删除此记录</button>
-                                    </div>
+                                    <div class="text-right mt-2"><button @click="deletePunishment(item.studentId, item.recordId)" class="text-red-600 text-xs px-3 py-1 border border-red-200 bg-white rounded">删除此记录</button></div>
                                 </div>
                             </div>
                             <div v-else class="text-center py-6 text-gray-400 text-sm">暂无已录入的班级处分记录</div>
@@ -415,13 +362,14 @@
                     </div>
                 </div>
 
+                <!-- 班级名册 -->
                 <div v-else-if="teacherTab === 'students'" key="students" class="m-4 md:my-6 md:px-8">
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                         <h3 class="text-lg font-bold text-gray-800 mb-4 border-l-4 border-[#1E40AF] pl-2">高一二班 学生名册</h3>
                         <div v-if="studentList.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div v-for="(stu, index) in studentList" :key="stu.id" class="flex justify-between bg-gray-50 rounded-lg p-3 text-sm transition-all duration-300 hover:bg-blue-50">
+                            <div v-for="stu in studentList" :key="stu.student_id" class="flex justify-between bg-gray-50 rounded-lg p-3 text-sm">
                                 <span class="font-bold text-[#1E40AF]">{{ stu.name }}</span>
-                                <span class="text-gray-600">学号：{{ stu.id }}</span>
+                                <span class="text-gray-600">学号：{{ stu.student_id }}</span>
                                 <span class="text-gray-500 text-xs">{{ stu.role }}</span>
                             </div>
                         </div>
@@ -429,34 +377,23 @@
                     </div>
                 </div>
 
+                <!-- 成绩管理 -->
                 <div v-else-if="teacherTab === 'scores'" key="scores" class="m-4 md:my-6 md:px-8 space-y-4">
                     <Transition name="tab-slide" mode="out-in">
                         <div v-if="!selectedExam" key="exam-list">
                             <div class="flex flex-col md:flex-row gap-4">
                                 <div class="w-full md:w-1/2 bg-white p-4 rounded-xl shadow-sm border border-[#1E40AF]/30 bg-blue-50/20">
                                     <h4 class="font-bold text-[#1E40AF] mb-3 border-l-4 border-[#1E40AF] pl-2">第一步：创建考试</h4>
-                                    <input v-model="examForm.name" type="text" placeholder="考试名称（如：高一上期中考试）" class="w-full p-2 border rounded mb-2 text-sm focus:ring-2 focus:ring-blue-200 transition-all duration-300">
-                                    <input v-model="examForm.date" type="date" class="w-full p-2 border rounded mb-2 text-sm focus:ring-2 focus:ring-blue-200 transition-all duration-300">
-                                    <div class="mb-4">
-                                        <label class="block text-gray-600 text-xs mb-2 font-bold">选择考试科目（可多选）</label>
-                                        <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
-                                            <label v-for="sub in allSubjects" :key="sub" class="flex items-center gap-1 text-sm text-gray-700 bg-white p-2 rounded border transition-all duration-300 hover:bg-blue-50">
-                                                <input type="checkbox" :value="sub" v-model="examForm.selectedSubjects" class="rounded text-[#1E40AF]">
-                                                {{ sub }}
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <button @click="createExam" class="w-full bg-[#1E40AF] text-white py-2 rounded text-sm font-bold transition-all duration-300 hover:bg-blue-800 active:scale-[0.98]">创建考试并开始录入</button>
+                                    <input v-model="examForm.name" type="text" placeholder="考试名称（如：高一上期中考试）" class="w-full p-2 border rounded mb-2 text-sm">
+                                    <input v-model="examForm.date" type="date" class="w-full p-2 border rounded mb-2 text-sm">
+                                    <div class="mb-4"><label class="block text-gray-600 text-xs mb-2 font-bold">选择考试科目（可多选）</label><div class="grid grid-cols-2 md:grid-cols-3 gap-2"><label v-for="sub in allSubjects" :key="sub" class="flex items-center gap-1 text-sm text-gray-700 bg-white p-2 rounded border"><input type="checkbox" :value="sub" v-model="examForm.selectedSubjects" class="rounded text-[#1E40AF]">{{ sub }}</label></div></div>
+                                    <button @click="createExam" class="w-full bg-[#1E40AF] text-white py-2 rounded text-sm font-bold hover:bg-blue-800">创建考试并开始录入</button>
                                 </div>
-
                                 <div class="w-full md:w-1/2 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                                     <h4 class="font-bold text-gray-800 mb-3 border-l-4 border-[#1E40AF] pl-2">历史考试</h4>
                                     <div v-if="exams.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                        <div v-for="exam in exams" :key="exam.id" @click="selectExam(exam.id)" class="flex justify-between items-center bg-gray-50 p-3 rounded-lg text-sm cursor-pointer hover:bg-blue-50 transition-all duration-300">
-                                            <div>
-                                                <p class="font-bold text-gray-800">{{ exam.name }}</p>
-                                                <p class="text-xs text-gray-500">{{ exam.date }} | {{ exam.subjects.length }} 科</p>
-                                            </div>
+                                        <div v-for="exam in exams" :key="exam.id" @click="selectExam(exam.id)" class="flex justify-between items-center bg-gray-50 p-3 rounded-lg text-sm cursor-pointer hover:bg-blue-50">
+                                            <div><p class="font-bold text-gray-800">{{ exam.name }}</p><p class="text-xs text-gray-500">{{ exam.date }} | {{ exam.subjects.length }} 科</p></div>
                                             <span class="text-[#1E40AF] text-xs font-bold">进入录入 ></span>
                                         </div>
                                     </div>
@@ -464,46 +401,27 @@
                                 </div>
                             </div>
                         </div>
-
                         <div v-else key="exam-detail">
-                            <div class="flex justify-between items-center mb-4">
-                                <h3 class="text-lg font-bold text-gray-800 border-l-4 border-[#1E40AF] pl-2">{{ selectedExam.name }}</h3>
-                                <button @click="selectedExamId = ''" class="text-xs text-gray-500 border border-gray-300 px-2 py-1 rounded bg-white transition-all duration-300 hover:bg-gray-100 active:scale-95">返回列表</button>
-                            </div>
-                            
-                            <div class="bg-blue-50 p-3 rounded-lg text-sm mb-4 text-[#1E40AF] font-bold">
-                                考试科目：{{ selectedExam.subjects.join('、') }}
-                            </div>
-
+                            <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold text-gray-800 border-l-4 border-[#1E40AF] pl-2">{{ selectedExam.name }}</h3><button @click="selectedExamId = ''" class="text-xs text-gray-500 border border-gray-300 px-2 py-1 rounded bg-white">返回列表</button></div>
+                            <div class="bg-blue-50 p-3 rounded-lg text-sm mb-4 text-[#1E40AF] font-bold">考试科目：{{ selectedExam.subjects.join('、') }}</div>
                             <div class="flex flex-col md:flex-row gap-4">
                                 <div class="w-full md:w-1/2">
                                     <div class="bg-white p-4 rounded-xl shadow-sm border border-blue-200 border-dashed bg-blue-50/30 mb-4">
                                         <h5 class="font-bold text-blue-800 text-xs mb-2">📥 Excel 批量导入成绩</h5>
-                                        <div class="text-[10px] text-gray-600 mb-2 bg-white p-2 rounded border">
-                                            <p class="font-bold mb-1">格式要求（第一行必须为表头）：</p>
-                                            <p>[学号] [姓名] [{{ selectedExam.subjects.join('] [') }}]</p>
-                                        </div>
-                                        <input type="file" accept=".xlsx, .xls, .csv" @change="handleScoreUpload" class="block w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200">
+                                        <div class="text-[10px] text-gray-600 mb-2 bg-white p-2 rounded border"><p class="font-bold mb-1">格式要求（第一行必须为表头）：</p><p>[学号] [姓名] [{{ selectedExam.subjects.join('] [') }}]</p></div>
+                                        <input type="file" accept=".xlsx, .xls, .csv" @change="handleScoreUpload" class="block w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-blue-100 file:text-blue-700">
                                     </div>
                                 </div>
                                 <div class="w-full md:w-1/2">
                                     <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 h-full flex flex-col">
                                         <h5 class="font-bold text-gray-800 mb-3 border-l-4 border-[#1E40AF] pl-2">手动录入</h5>
                                         <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[400px] overflow-y-auto pr-1">
-                                            <div v-for="(stu, index) in studentList" :key="stu.id" class="bg-gray-50 p-3 rounded-lg border border-gray-100 transition-all duration-300 hover:shadow-sm">
-                                                <div class="flex justify-between items-center mb-2">
-                                                    <span class="font-bold text-gray-700">{{ stu.name }}</span>
-                                                    <span class="text-xs text-gray-400">{{ stu.id }}</span>
-                                                </div>
-                                                <div class="grid grid-cols-2 gap-2">
-                                                    <div v-for="sub in selectedExam.subjects" :key="sub" class="flex items-center gap-2">
-                                                        <span class="text-xs text-gray-500 w-8">{{ sub }}</span>
-                                                        <input v-model="scoreEntryData[stu.id][sub]" type="number" placeholder="分数" class="w-full p-1 text-sm border rounded focus:ring-1 focus:ring-blue-200 transition-all duration-300">
-                                                    </div>
-                                                </div>
+                                            <div v-for="stu in studentList" :key="stu.id" class="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                                <div class="flex justify-between items-center mb-2"><span class="font-bold text-gray-700">{{ stu.name }}</span><span class="text-xs text-gray-400">{{ stu.student_id }}</span></div>
+                                                <div class="grid grid-cols-2 gap-2"><div v-for="sub in selectedExam.subjects" :key="sub" class="flex items-center gap-2"><span class="text-xs text-gray-500 w-8">{{ sub }}</span><input v-model="scoreEntryData[stu.student_id][sub]" type="number" placeholder="分数" class="w-full p-1 text-sm border rounded"></div></div>
                                             </div>
                                         </div>
-                                        <button @click="saveScores" class="w-full bg-[#1E40AF] text-white py-3 rounded-lg font-bold transition-all duration-300 hover:bg-blue-800 mt-4 shadow-md active:scale-[0.98]">保存本次成绩</button>
+                                        <button @click="saveScores" class="w-full bg-[#1E40AF] text-white py-3 rounded-lg font-bold hover:bg-blue-800 mt-4">保存本次成绩</button>
                                     </div>
                                 </div>
                             </div>
@@ -513,222 +431,19 @@
             </Transition>
         </div>
 
-        <!-- 7. 管理员后台 -->
-        <div v-else-if="currentPage === 'admin-dashboard'" key="admin-dashboard" class="min-h-screen md:min-h-[90vh] pb-20 bg-gray-50 relative flex flex-col w-full">
-            <div class="bg-white px-4 py-3 md:px-8 md:py-4 flex flex-col md:flex-row justify-between items-center border-b border-gray-100 shadow-sm sticky top-0 z-50 md:rounded-t-3xl">
-                <div class="flex items-center gap-2 md:gap-4 w-full md:w-auto justify-between md:justify-start">
-                    <div class="flex items-center gap-2">
-                        <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-red-600 flex items-center justify-center text-white text-xs md:text-base font-bold">管</div>
-                        <div>
-                            <h1 class="text-[#1E40AF] font-bold text-sm md:text-lg leading-tight">管理后台</h1>
-                            <p class="text-[10px] md:text-xs text-gray-400 tracking-wider">桐乡市凤鸣高级中学</p>
-                        </div>
-                    </div>
-                    <button @click="handleLogout" class="md:hidden text-xs text-gray-500 transition-all duration-300 hover:text-red-600">退出后台</button>
-                </div>
-                <div class="hidden md:flex items-center gap-6 mt-0">
-                    <span @click="adminTab='students'" :class="adminTab==='students' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF] transition-all duration-300'" class="cursor-pointer text-base">学生管理</span>
-                    <span @click="adminTab='punish'" :class="adminTab==='punish' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF] transition-all duration-300'" class="cursor-pointer text-base">处分管理</span>
-                    <span @click="adminTab='notices'" :class="adminTab==='notices' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF] transition-all duration-300'" class="cursor-pointer text-base">通知管理</span>
-                    <span @click="adminTab='schedule'" :class="adminTab==='schedule' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF] transition-all duration-300'" class="cursor-pointer text-base">课表管理</span>
-                </div>
-                <button @click="handleLogout" class="hidden md:block text-sm text-gray-500 transition-all duration-300 hover:text-red-600">退出后台</button>
-            </div>
-
-            <div class="bg-white flex justify-between px-2 py-3 text-xs shadow-sm mb-2 sticky top-[53px] z-40 md:hidden overflow-x-auto">
-                <span @click="adminTab='students'" :class="adminTab==='students' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 border-b-2 border-transparent pb-1'" class="cursor-pointer transition-all duration-300 px-2 flex-shrink-0">学生管理</span>
-                <span @click="adminTab='punish'" :class="adminTab==='punish' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 border-b-2 border-transparent pb-1'" class="cursor-pointer transition-all duration-300 px-2 flex-shrink-0">处分管理</span>
-                <span @click="adminTab='notices'" :class="adminTab==='notices' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 border-b-2 border-transparent pb-1'" class="cursor-pointer transition-all duration-300 px-2 flex-shrink-0">通知管理</span>
-                <span @click="adminTab='schedule'" :class="adminTab==='schedule' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 border-b-2 border-transparent pb-1'" class="cursor-pointer transition-all duration-300 px-2 flex-shrink-0">课表管理</span>
-            </div>
-
-            <Transition name="tab-slide" mode="out-in">
-                <div v-if="adminTab === 'students'" key="students" class="m-4 md:my-6 md:px-8 space-y-4">
-                    <div class="flex flex-col md:flex-row gap-4">
-                        <div class="w-full md:w-1/2 bg-white p-4 rounded-xl shadow-sm border border-blue-200 border-dashed bg-blue-50/30">
-                            <h4 class="font-bold text-blue-800 mb-3 flex items-center gap-2"><span>📥</span> 批量导入学生 (Excel/CSV)</h4>
-                            <p class="text-xs text-gray-500 mb-3">请确保表格为四列：[学号, 姓名, 职务, 电话]。</p>
-                            <input type="file" accept=".xlsx, .xls, .csv" @change="handleFileUpload" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200">
-                        </div>
-                        <div class="w-full md:w-1/2 bg-white p-4 rounded-xl shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md">
-                            <h4 class="font-bold text-gray-800 mb-3">手动添加/编辑学生</h4>
-                            <div class="grid grid-cols-2 gap-2">
-                                <input v-model="editStudent.id" type="text" placeholder="学号" class="w-full p-2 border rounded text-sm transition-all duration-300 focus:ring-2 focus:ring-blue-200">
-                                <input v-model="editStudent.name" type="text" placeholder="姓名" class="w-full p-2 border rounded text-sm transition-all duration-300 focus:ring-2 focus:ring-blue-200">
-                                <input v-model="editStudent.role" type="text" placeholder="职务" class="w-full p-2 border rounded text-sm transition-all duration-300 focus:ring-2 focus:ring-blue-200">
-                                <input v-model="editStudent.phone" type="text" placeholder="电话" class="w-full p-2 border rounded text-sm transition-all duration-300 focus:ring-2 focus:ring-blue-200">
-                            </div>
-                            <button @click="saveStudent" class="bg-[#1E40AF] text-white px-4 py-2 rounded text-sm font-bold w-full transition-all duration-300 hover:bg-blue-800 active:scale-[0.98] mt-3">保存学生信息</button>
-                        </div>
-                    </div>
-                    
-                    <div v-if="studentList.length > 0" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div v-for="(stu, index) in studentList" :key="stu.id" class="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center transition-all duration-300 hover:shadow-md">
-                            <div>
-                                <p class="font-bold text-gray-800">{{ stu.name }} <span class="text-xs font-normal text-gray-500">({{ stu.role }})</span></p>
-                                <p class="text-xs text-gray-400">学号：{{ stu.id }} | 电话：{{ stu.phone }}</p>
-                            </div>
-                            <div class="flex gap-1">
-                                <button @click="editStudentData(stu)" class="text-blue-600 text-xs px-2 py-1 border border-blue-200 rounded transition-all duration-300 hover:bg-blue-50 active:scale-95">编辑</button>
-                                <button @click="deleteStudent(stu.id)" class="text-red-600 text-xs px-2 py-1 border border-red-200 rounded transition-all duration-300 hover:bg-red-50 active:scale-95">删除</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div v-else class="text-center py-6 text-gray-400 text-sm">暂无学生数据</div>
-                </div>
-
-                <div v-else-if="adminTab === 'punish'" key="punish" class="m-4 md:my-6 md:px-8 space-y-4">
-                    <div class="flex flex-col md:flex-row gap-4">
-                        <div class="w-full md:w-1/3 bg-white p-4 rounded-xl shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md">
-                            <h4 class="font-bold text-gray-800 mb-3">录入处分</h4>
-                            <select v-model="punishForm.studentId" class="w-full p-2 border rounded mb-2 text-sm bg-white transition-all duration-300 focus:ring-2 focus:ring-blue-200">
-                                <option value="" disabled>选择学生</option>
-                                <option v-for="(stu, index) in studentList" :key="stu.id" :value="stu.id">{{ stu.name }} ({{ stu.id }})</option>
-                            </select>
-                            <select v-model="punishForm.level" class="w-full p-2 border rounded mb-2 text-sm bg-white transition-all duration-300 focus:ring-2 focus:ring-blue-200">
-                                <option value="班级处分">班级处分</option>
-                                <option value="学校处分">学校处分</option>
-                            </select>
-                            <select v-if="punishForm.level === '学校处分'" v-model="punishForm.issuer" class="w-full p-2 border rounded mb-2 text-sm bg-white transition-all duration-300 focus:ring-2 focus:ring-blue-200">
-                                <option value="" disabled>选择作出处分的机构</option>
-                                <option value="高一年级部">高一年级部</option>
-                                <option value="高二年级部">高二年级部</option>
-                                <option value="高三年级部">高三年级部</option>
-                            </select>
-                            <input v-model="punishForm.reason" type="text" placeholder="处分原因" class="w-full p-2 border rounded mb-2 text-sm transition-all duration-300 focus:ring-2 focus:ring-blue-200">
-                            <input v-model="punishForm.penalty" type="text" placeholder="处罚措施" class="w-full p-2 border rounded mb-2 text-sm transition-all duration-300 focus:ring-2 focus:ring-blue-200">
-                            <input v-model="punishForm.date" type="date" class="w-full p-2 border rounded mb-3 text-sm transition-all duration-300 focus:ring-2 focus:ring-blue-200">
-                            <button @click="addPunishment" class="bg-red-600 text-white px-4 py-2 rounded text-sm font-bold w-full transition-all duration-300 hover:bg-red-700 active:scale-[0.98]">确认录入处分</button>
-                        </div>
-
-                        <div class="w-full md:w-2/3 bg-white p-4 rounded-xl shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md">
-                            <h4 class="font-bold text-gray-800 mb-3 border-l-4 border-red-500 pl-2">全校处分记录（可删除）</h4>
-                            <div v-if="allPunishments.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div v-for="item in allPunishments" :key="item.id" 
-                                     :class="item.level === '学校处分' ? 'bg-red-50 border-red-200' : 'bg-orange-50 border-orange-200'" 
-                                     class="p-3 rounded-lg border transition-all duration-300 hover:shadow-md">
-                                    <div class="flex justify-between items-center mb-1">
-                                        <span :class="item.level === '学校处分' ? 'text-red-700 bg-red-100' : 'text-orange-700 bg-orange-100'" class="text-xs font-bold px-2 py-0.5 rounded">{{ item.studentName }} ({{ item.studentId }}) - {{ item.level }}</span>
-                                        <span class="text-xs text-gray-400">{{ item.date }}</span>
-                                    </div>
-                                    <p class="text-sm font-bold mt-1">原因：{{ item.reason }}</p>
-                                    <p class="text-xs text-gray-600 mt-1">处罚：{{ item.penalty }}</p>
-                                    <p class="text-xs text-gray-500 mt-1">机构：{{ item.issuer }}</p>
-                                    <div class="text-right mt-2">
-                                        <button @click="deletePunishment(item.studentId, item.recordId)" class="text-red-600 text-xs px-3 py-1 border border-red-200 bg-white rounded shadow-sm transition-all duration-300 hover:bg-red-50 active:scale-95">删除此处分</button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div v-else class="text-center py-6 text-gray-400 text-sm">暂无任何处分记录</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div v-else-if="adminTab === 'notices'" key="notices" class="m-4 md:my-6 md:px-8 space-y-4">
-                    <div class="flex flex-col md:flex-row gap-4">
-                        <div class="w-full md:w-1/2 bg-white p-4 rounded-xl shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md">
-                            <h4 class="font-bold text-gray-800 mb-3">发布通知</h4>
-                            <input v-model="newNotice.title" type="text" placeholder="标题" class="w-full p-2 border rounded mb-2 text-sm transition-all duration-300 focus:ring-2 focus:ring-blue-200">
-                            <textarea v-model="newNotice.content" rows="3" placeholder="内容" class="w-full p-2 border rounded mb-3 text-sm transition-all duration-300 focus:ring-2 focus:ring-blue-200"></textarea>
-                            <button @click="publishNotice" class="bg-[#1E40AF] text-white px-4 py-2 rounded text-sm font-bold w-full transition-all duration-300 hover:bg-blue-800 active:scale-[0.98]">发布</button>
-                        </div>
-                        
-                        <div class="w-full md:w-1/2 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                            <h4 class="font-bold text-gray-800 mb-3 border-l-4 border-[#1E40AF] pl-2">已发布通知</h4>
-                            <div v-if="noticeData.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <div v-for="(item, index) in noticeData" :key="index" class="bg-gray-50 p-3 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center transition-all duration-300 hover:shadow-md">
-                                    <div><p class="font-bold text-gray-800 text-sm">{{ item.title }}</p><p class="text-xs text-gray-400">{{ item.date }}</p></div>
-                                    <button @click="deleteNotice(index)" class="text-red-500 text-xs px-2 py-1 border border-red-200 rounded transition-all duration-300 hover:bg-red-50 active:scale-95">删除</button>
-                                </div>
-                            </div>
-                            <div v-else class="text-center py-6 text-gray-400 text-sm">暂无通知记录</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div v-else-if="adminTab === 'schedule'" key="schedule" class="m-4 md:my-6 md:px-8 space-y-4">
-                    <div class="flex flex-col md:flex-row gap-4">
-                        <div class="w-full md:w-1/3 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                            <h4 class="font-bold text-gray-800 mb-3 border-l-4 border-[#1E40AF] pl-2">{{ editScheduleIndex === -1 ? '添加新课程' : '编辑课程' }}</h4>
-                            <div class="mb-3">
-                                <label class="block text-gray-600 text-xs mb-1">星期</label>
-                                <select v-model="scheduleForm.day" class="w-full p-2 border rounded text-sm bg-white focus:ring-2 focus:ring-blue-200 transition-all duration-300">
-                                    <option value="周一">周一</option>
-                                    <option value="周二">周二</option>
-                                    <option value="周三">周三</option>
-                                    <option value="周四">周四</option>
-                                    <option value="周五">周五</option>
-                                    <option value="周六">周六</option>
-                                    <option value="周日">周日</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="block text-gray-600 text-xs mb-1">课程名称</label>
-                                <input v-model="scheduleForm.course" type="text" placeholder="例如：语文" class="w-full p-2 border rounded text-sm focus:ring-2 focus:ring-blue-200 transition-all duration-300">
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-gray-600 text-xs mb-1">任课教师</label>
-                                <input v-model="scheduleForm.teacher" type="text" placeholder="例如：张老师" class="w-full p-2 border rounded text-sm focus:ring-2 focus:ring-blue-200 transition-all duration-300">
-                            </div>
-                            <div class="flex gap-2">
-                                <button v-if="editScheduleIndex !== -1" @click="cancelEditSchedule" class="flex-1 bg-gray-100 text-gray-600 px-4 py-2 rounded text-sm font-bold transition-all duration-300 hover:bg-gray-200 active:scale-[0.98]">取消编辑</button>
-                                <button @click="addOrUpdateSchedule" class="flex-1 bg-[#1E40AF] text-white px-4 py-2 rounded text-sm font-bold transition-all duration-300 hover:bg-blue-800 active:scale-[0.98]">{{ editScheduleIndex === -1 ? '添加课程' : '保存修改' }}</button>
-                            </div>
-                        </div>
-
-                        <div class="w-full md:w-2/3 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                            <h4 class="font-bold text-gray-800 mb-3 border-l-4 border-[#1E40AF] pl-2">高一二班 课表（按周一到周日）</h4>
-                            <div v-if="scheduleData.length > 0" class="grid grid-cols-1 md:grid-cols-7 gap-2">
-                                <div v-for="(courses, day) in groupedSchedule" :key="day" class="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                                    <div class="font-bold text-[#1E40AF] text-center mb-3 pb-2 border-b border-gray-200 text-sm">{{ day }}</div>
-                                    <div v-if="courses.length > 0" class="space-y-2">
-                                        <div v-for="(course, idx) in courses" :key="idx" class="bg-white rounded p-2 text-xs border border-gray-100 shadow-sm flex justify-between items-center">
-                                            <div>
-                                                <div class="font-bold text-gray-800">{{ course.course }}</div>
-                                                <div class="text-gray-500 text-[10px]">{{ course.teacher }}</div>
-                                            </div>
-                                            <div class="flex flex-col gap-1">
-                                                <button @click="editSchedule(scheduleData.indexOf(course))" class="text-blue-600 text-[10px] border border-blue-200 rounded px-1 hover:bg-blue-50">编辑</button>
-                                                <button @click="deleteSchedule(scheduleData.indexOf(course))" class="text-red-600 text-[10px] border border-red-200 rounded px-1 hover:bg-red-50">删除</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div v-else class="text-center text-gray-400 text-xs py-4">无课程</div>
-                                </div>
-                            </div>
-                            <div v-else class="text-center py-6 text-gray-400 text-sm">暂无课表数据，请添加</div>
-                        </div>
-                    </div>
-                </div>
-            </Transition>
-
-            <div class="watermark-container opacity-[0.03] pointer-events-none fixed">
-                <span v-for="n in 40" :key="n" class="watermark-text text-black">管理员 · 桐乡市凤鸣高级中学 · 仅限内部管理使用</span>
-            </div>
-        </div>
-
     </Transition>
 
-    <!-- 修改密码模态框 -->
+    <!-- 修改密码模态框 (Supabase 的修改密码需要验证旧密码) -->
     <Transition name="page-fade">
         <div v-if="showPasswordModal" class="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
             <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-xl">
                 <h3 class="text-xl font-bold text-gray-800 mb-6 text-center">修改密码</h3>
-                <div class="mb-4">
-                    <label class="block text-gray-600 text-sm mb-2">原密码</label>
-                    <input v-model="pwdForm.oldPwd" type="password" placeholder="请输入原密码" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#1E40AF] focus:ring-2 focus:ring-blue-200 transition-all duration-300">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-600 text-sm mb-2">新密码</label>
-                    <input v-model="pwdForm.newPwd" type="password" placeholder="请输入新密码（至少6位）" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#1E40AF] focus:ring-2 focus:ring-blue-200 transition-all duration-300">
-                </div>
-                <div class="mb-6">
-                    <label class="block text-gray-600 text-sm mb-2">确认新密码</label>
-                    <input v-model="pwdForm.confirmPwd" type="password" placeholder="请再次输入新密码" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#1E40AF] focus:ring-2 focus:ring-blue-200 transition-all duration-300">
-                </div>
+                <div class="mb-4"><label class="block text-gray-600 text-sm mb-2">原密码</label><input v-model="pwdForm.oldPwd" type="password" placeholder="请输入原密码" class="w-full p-3 border rounded-lg"></div>
+                <div class="mb-4"><label class="block text-gray-600 text-sm mb-2">新密码</label><input v-model="pwdForm.newPwd" type="password" placeholder="请输入新密码（至少6位）" class="w-full p-3 border rounded-lg"></div>
+                <div class="mb-6"><label class="block text-gray-600 text-sm mb-2">确认新密码</label><input v-model="pwdForm.confirmPwd" type="password" placeholder="请再次输入新密码" class="w-full p-3 border rounded-lg"></div>
                 <div class="flex gap-3">
-                    <button @click="closePasswordModal" class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-lg font-bold transition-all duration-300 hover:bg-gray-200 active:scale-[0.98]">取消</button>
-                    <button @click="submitPasswordChange" class="flex-1 bg-[#1E40AF] text-white py-3 rounded-lg font-bold transition-all duration-300 hover:bg-blue-800 active:scale-[0.98]">确认修改</button>
+                    <button @click="closePasswordModal" class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-lg font-bold">取消</button>
+                    <button @click="submitPasswordChange" class="flex-1 bg-[#1E40AF] text-white py-3 rounded-lg font-bold">确认修改</button>
                 </div>
             </div>
         </div>
@@ -737,16 +452,20 @@
 </div>
 
 <script>
-    window.addEventListener('error', function(e) {
-        console.error("捕获到错误:", e.message);
-        document.getElementById('error-overlay').style.display = 'flex';
-    });
-    window.addEventListener('unhandledrejection', function(e) {
-        console.error("捕获到Promise错误:", e.reason);
-        document.getElementById('error-overlay').style.display = 'flex';
-    });
+    // ================= 配置区 =================
+    // 请将下面的 URL 和 Key 替换为你 Supabase 项目中的实际值
+    const SUPABASE_URL = '你的_SUPABASE_URL';
+    const SUPABASE_ANON_KEY = '你的_SUPABASE_ANON_KEY';
+    
+    // 初始化 Supabase
+    const { createClient } = supabase;
+    const dbClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // ==========================================
 
-    const { createApp, ref, reactive, computed } = Vue;
+    window.addEventListener('error', function(e) { console.error("错误:", e.message); document.getElementById('error-overlay').style.display = 'flex'; });
+    window.addEventListener('unhandledrejection', function(e) { console.error("Promise错误:", e.reason); document.getElementById('error-overlay').style.display = 'flex'; });
+
+    const { createApp, ref, reactive, computed, onMounted } = Vue;
 
     createApp({
         setup() {
@@ -754,500 +473,211 @@
             const userType = ref('student');
             const dashboardTab = ref('overview');
             const teacherTab = ref('overview');
-            const adminTab = ref('students');
+            const isLoading = ref(false);
             
             const loginForm = reactive({ username: '', password: '' });
             const adminForm = reactive({ username: '', password: '' });
             const regForm = reactive({ name: '', id: '', email: '' });
-            const verifyCodeInput = ref('');
             const newNotice = reactive({ title: '', content: '' });
             const editStudent = reactive({ id: '', name: '', role: '', phone: '' });
-            
             const punishForm = reactive({ studentId: '', level: '班级处分', issuer: '', reason: '', penalty: '', date: new Date().toISOString().split('T')[0] });
             const teacherPunishForm = reactive({ studentId: '', reason: '', penaltyType: '抬水', customPenalty: '', date: new Date().toISOString().split('T')[0] });
-
             const scheduleForm = reactive({ day: '周一', course: '', teacher: '' });
             const editScheduleIndex = ref(-1);
-
             const allSubjects = ['语文', '数学', '英语', '物理', '化学', '生物', '历史', '地理', '政治', '技术'];
             const examForm = reactive({ name: '', date: new Date().toISOString().split('T')[0], selectedSubjects: [] });
             const selectedExamId = ref('');
-            const selectedExam = computed(() => exams.value.find(e => e.id === selectedExamId.value));
             const scoreEntryData = reactive({});
             const expandedExams = ref({});
-
             const showPasswordModal = ref(false);
             const pwdForm = reactive({ oldPwd: '', newPwd: '', confirmPwd: '' });
-
-            let generatedCode = null;
             const currentUser = reactive({});
 
-            const loadDB = () => {
-                try {
-                    const saved = localStorage.getItem('fm_school_db');
-                    if (saved) {
-                        const dbData = JSON.parse(saved);
-                        if (dbData.students) {
-                            Object.values(dbData.students).forEach(student => {
-                                if (!student.pwd) student.pwd = '123456';
-                                if (!student.punishments) student.punishments = [];
-                                student.punishments.forEach(p => {
-                                    if (!p.id) p.id = Date.now() + Math.floor(Math.random() * 1000);
-                                });
-                            });
-                        }
-                        if (!dbData.teachers) {
-                            dbData.teachers = { 'T001': { id: 'T001', pwd: '123456', name: '王老师', role: '班主任', phone: '13900000000' } };
-                        }
-                        return dbData;
-                    }
-                } catch (e) {
-                    console.error("本地数据损坏，已重置", e);
-                    localStorage.removeItem('fm_school_db');
-                }
-                return {
-                    students: {
-                        // 已将测试学生名字改为“李华”
-                        '2610801': { id: '2610801', pwd: '123456', name: '李华', className: '高一二班', role: '副班长', phone: '18868379525', punishments: [] }
-                    },
-                    teachers: {
-                        'T001': { id: 'T001', pwd: '123456', name: '王老师', role: '班主任', phone: '13900000000' }
-                    }
-                };
-            };
-            
-            const db = reactive(loadDB());
-            
-            const saveDB = () => {
-                localStorage.setItem('fm_school_db', JSON.stringify(db));
-            };
+            // 响应式数据
+            const studentList = ref([]);
+            const notices = ref([]);
+            const scheduleData = ref([]);
+            const exams = ref([]);
+            const allPunishments = ref([]);
 
-            const loadExams = () => {
-                try {
-                    const saved = localStorage.getItem('fm_school_exams');
-                    if (saved) return JSON.parse(saved);
-                } catch(e) {}
-                return [];
-            };
-            const exams = ref(loadExams());
-            const saveExams = () => {
-                localStorage.setItem('fm_school_exams', JSON.stringify(exams.value));
-            };
-
+            // 计算属性
+            const selectedExam = computed(() => exams.value.find(e => e.id === selectedExamId.value));
+            const classPunishments = computed(() => allPunishments.value.filter(p => p.level === '班级处分'));
+            const groupedSchedule = computed(() => {
+                const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+                const groups = {}; days.forEach(d => groups[d] = []);
+                scheduleData.value.forEach(item => { if (groups[item.day]) groups[item.day].push(item); });
+                return groups;
+            });
             const myExams = computed(() => {
                 if (!currentUser.id) return [];
                 return exams.value.map(exam => {
-                    const studentScores = exam.scores && exam.scores[currentUser.id] ? exam.scores[currentUser.id] : {};
-                    return {
-                        ...exam,
-                        myScores: studentScores
-                    };
+                    const studentScores = exam.scores && exam.scores[currentUser.student_id] ? exam.scores[currentUser.student_id] : {};
+                    return { ...exam, myScores: studentScores };
                 }).filter(exam => Object.keys(exam.myScores).length > 0);
             });
 
-            const loadScheduleData = () => {
+            // ================= 数据拉取函数 =================
+            const fetchData = async () => {
                 try {
-                    const saved = localStorage.getItem('fm_school_schedule');
-                    if (saved) return JSON.parse(saved);
-                } catch(e) {}
-                return [
-                    { day: '周一', course: '语文', teacher: '张老师' }, { day: '周一', course: '数学', teacher: '李老师' },
-                    { day: '周二', course: '英语', teacher: '王老师' }, { day: '周二', course: '物理', teacher: '赵老师' },
-                    { day: '周三', course: '化学', teacher: '陈老师' }, { day: '周三', course: '生物', teacher: '刘老师' },
-                ];
-            };
-            const scheduleData = ref(loadScheduleData());
-            const saveScheduleData = () => {
-                localStorage.setItem('fm_school_schedule', JSON.stringify(scheduleData.value));
-            };
-
-            const groupedSchedule = computed(() => {
-                const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
-                const groups = {};
-                days.forEach(d => groups[d] = []);
-                scheduleData.value.forEach(item => {
-                    if (groups[item.day]) {
-                        groups[item.day].push(item);
+                    const [profileRes, noticeRes, scheduleRes, examRes, punishRes] = await Promise.all([
+                        dbClient.from('profiles').select('*'),
+                        dbClient.from('notices').select('*').order('created_at', { ascending: false }),
+                        dbClient.from('schedule').select('*'),
+                        dbClient.from('exams').select('*'),
+                        dbClient.from('punishments').select('*')
+                    ]);
+                    
+                    if (profileRes.data) studentList.value = profileRes.data;
+                    if (noticeRes.data) notices.value = noticeRes.data;
+                    if (scheduleRes.data) scheduleData.value = scheduleRes.data;
+                    if (examRes.data) exams.value = examRes.data;
+                    if (punishRes.data) {
+                        allPunishments.value = punishRes.data.map(p => ({ ...p, studentName: p.student_name, studentId: p.student_id, recordId: p.id }));
                     }
-                });
-                return groups;
-            });
-
-            const loadNotices = () => {
-                try {
-                    const saved = localStorage.getItem('fm_school_notices');
-                    if (saved) return JSON.parse(saved);
-                } catch(e) {}
-                return [
-                    { tag: '重要', title: '关于期中考试安排的通知', date: '2026-09-20', content: '请各位同学做好复习准备，考试将于下周三进行。' },
-                    { tag: '日常', title: '班级卫生大扫除', date: '2026-09-18', content: '今天下午放学后进行大扫除，请各小组长带队。' }
-                ];
-            };
-            const noticeData = ref(loadNotices());
-            const saveNotices = () => {
-                localStorage.setItem('fm_school_notices', JSON.stringify(noticeData.value));
+                } catch (error) { console.error("拉取数据失败:", error); }
             };
 
-            const studentList = computed(() => Object.values(db.students));
+            // ================= 登录 =================
+            const handleLogin = async () => {
+                if (!loginForm.username || !loginForm.password) return alert('请输入账号和密码');
+                isLoading.value = true;
+                
+                // 因为 Supabase Auth 默认用邮箱，我们前端拼接虚拟邮箱：学号@fmhs.com
+                const email = `${loginForm.username}@fmhs.com`;
+                
+                const { data, error } = await dbClient.auth.signInWithPassword({ email, password: loginForm.password });
+                isLoading.value = false;
 
-            const allPunishments = computed(() => {
-                let list = [];
-                for (let stuId in db.students) {
-                    let stu = db.students[stuId];
-                    if (stu.punishments) {
-                        stu.punishments.forEach(p => {
-                            list.push({
-                                ...p,
-                                studentId: stu.id,
-                                studentName: stu.name,
-                                recordId: p.id
-                            });
-                        });
-                    }
-                }
-                return list.sort((a, b) => new Date(b.date) - new Date(a.date));
-            });
+                if (error) return alert('登录失败：' + error.message);
 
-            const classPunishments = computed(() => {
-                return allPunishments.value.filter(p => p.level === '班级处分');
-            });
-
-            const handleLogin = () => {
-                const user = userType.value === 'student' ? db.students[loginForm.username] : db.teachers[loginForm.username];
-                if (user && user.pwd === loginForm.password) {
-                    Object.assign(currentUser, user);
-                    if (userType.value === 'teacher') {
+                // 获取用户资料
+                const { data: profile } = await dbClient.from('profiles').select('*').eq('id', data.user.id).single();
+                if (profile) {
+                    Object.assign(currentUser, profile);
+                    if (profile.role === '教师' || profile.role === '管理员') {
                         currentPage.value = 'teacher-dashboard';
-                        teacherTab.value = 'overview';
                     } else {
                         currentPage.value = 'dashboard';
-                        dashboardTab.value = 'overview';
                     }
+                    await fetchData(); // 登录成功后拉取所有数据
                 } else {
-                    alert('账号或密码错误！');
+                    alert('找不到用户资料，请联系管理员');
                 }
             };
 
-            const handleAdminLogin = () => {
-                if (adminForm.username === 'admin' && adminForm.password === 'admin123') {
-                    currentPage.value = 'admin-dashboard';
-                    adminTab.value = 'students';
-                } else {
-                    alert('管理员账号或密码错误！(admin / admin123)');
-                }
-            };
-
-            const handleLogout = () => {
-                currentPage.value = 'login';
-                loginForm.username = '';
-                loginForm.password = '';
-                adminForm.username = '';
-                adminForm.password = '';
-                cancelEditSchedule();
-                selectedExamId.value = '';
-                Object.keys(scoreEntryData).forEach(k => delete scoreEntryData[k]);
-                expandedExams.value = {};
-            };
-
-            const handleRegister = () => {
+            // ================= 注册 =================
+            const handleRegister = async () => {
                 if (!regForm.name || !regForm.id || !regForm.email) return alert('请填写完整信息');
-                generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
-                alert(`【模拟邮件】您的验证码是：${generatedCode}，请填写。`);
-                currentPage.value = 'verify';
-            };
-            const simulateSendCode = () => {
-                if (generatedCode) alert(`【模拟邮件】您的验证码是：${generatedCode}`);
-                else alert('请先注册');
-            };
-            const handleVerify = () => {
-                if (verifyCodeInput.value === generatedCode) {
-                    if (!db.students[regForm.id]) {
-                        db.students[regForm.id] = {
-                            id: regForm.id,
-                            pwd: '123456',
-                            name: regForm.name,
-                            className: '高一二班',
-                            role: '学生',
-                            phone: '未填写',
-                            punishments: []
-                        };
-                        saveDB();
-                        alert(`注册成功！账号 ${regForm.id} 已自动创建，密码 123456。`);
-                    } else {
-                        alert('该学号已存在，请直接登录。');
-                    }
-                    currentPage.value = 'login';
-                } else {
-                    alert('验证码错误');
+                isLoading.value = true;
+
+                const email = `${regForm.id}@fmhs.com`; // 使用学号作为账号邮箱
+                const { data, error } = await dbClient.auth.signUp({ email, password: '123456' }); // 默认密码 123456
+                isLoading.value = false;
+
+                if (error) return alert('注册失败：' + error.message);
+
+                if (data.user) {
+                    // 将资料写入 profiles 表
+                    const { error: profileError } = await dbClient.from('profiles').insert({
+                        id: data.user.id,
+                        student_id: regForm.id,
+                        name: regForm.name,
+                        role: '学生',
+                        class_name: '高一二班',
+                        phone: '未填写'
+                    });
+                    if (profileError) return alert('资料写入失败：' + profileError.message);
                 }
+                
+                currentPage.value = 'verify'; // 跳转到邮箱验证提示页
             };
 
-            const handleFileUpload = (event) => {
-                const file = event.target.files[0];
-                if (!file) return;
-
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, { type: 'array' });
-                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                        const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-                        
-                        let count = 0;
-                        for (let i = 1; i < jsonData.length; i++) {
-                            const row = jsonData[i];
-                            if (row && row[0] && row[1]) {
-                                const id = String(row[0]).trim();
-                                const name = String(row[1]).trim();
-                                const role = row[2] ? String(row[2]).trim() : '学生';
-                                const phone = row[3] ? String(row[3]).trim() : '未填写';
-
-                                if (!db.students[id]) {
-                                    db.students[id] = {
-                                        id: id, name: name, className: '高一二班',
-                                        role: role, phone: phone, pwd: '123456',
-                                        punishments: []
-                                    };
-                                    count++;
-                                }
-                            }
-                        }
-                        saveDB();
-                        alert(`导入完成！成功添加 ${count} 名学生（已忽略重复学号）。`);
-                        event.target.value = '';
-                    } catch (error) {
-                        alert('文件解析失败，请确保上传的是标准格式的 Excel (第一列:学号, 第二列:姓名, 第三列:职务, 第四列:电话)');
-                        console.error(error);
-                    }
-                };
-                reader.readAsArrayBuffer(file);
+            // ================= 退出登录 =================
+            const handleLogout = async () => {
+                await dbClient.auth.signOut();
+                currentPage.value = 'login';
+                loginForm.username = ''; loginForm.password = '';
+                Object.assign(currentUser, {});
             };
 
-            const publishNotice = () => {
+            // ================= 发布通知 =================
+            const publishNotice = async () => {
                 if (!newNotice.title || !newNotice.content) return alert('请填写完整通知');
-                noticeData.value.unshift({
-                    tag: '新',
-                    title: newNotice.title,
-                    content: newNotice.content,
-                    date: new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '-')
+                const { error } = await dbClient.from('notices').insert({
+                    tag: '新', title: newNotice.title, content: newNotice.content,
+                    date: new Date().toLocaleDateString('zh-CN').replace(/\//g, '-')
                 });
-                saveNotices();
+                if (error) return alert('发布失败：' + error.message);
+                newNotice.title = ''; newNotice.content = '';
+                await fetchData(); // 重新拉取通知
                 alert('通知发布成功！');
-                newNotice.title = '';
-                newNotice.content = '';
-            };
-            const deleteNotice = (index) => {
-                if (confirm('确定删除此通知吗？')) {
-                    noticeData.value.splice(index, 1);
-                    saveNotices();
-                }
             };
 
-            const saveStudent = () => {
-                if (!editStudent.id || !editStudent.name) return alert('学号和姓名不能为空');
-                if (db.students[editStudent.id]) {
-                    db.students[editStudent.id].name = editStudent.name;
-                    db.students[editStudent.id].role = editStudent.role || '学生';
-                    db.students[editStudent.id].phone = editStudent.phone || '未填写';
-                } else {
-                    db.students[editStudent.id] = {
-                        id: editStudent.id,
-                        pwd: '123456',
-                        name: editStudent.name,
-                        className: '高一二班',
-                        role: editStudent.role || '学生',
-                        phone: editStudent.phone || '未填写',
-                        punishments: []
-                    };
-                }
-                saveDB();
-                alert('学生信息保存成功！');
-                editStudent.id = '';
-                editStudent.name = '';
-                editStudent.role = '';
-                editStudent.phone = '';
+            const deleteNotice = async (id) => {
+                if (!confirm('确定删除此通知吗？')) return;
+                await dbClient.from('notices').delete().eq('id', id);
+                await fetchData();
             };
 
-            const editStudentData = (stu) => {
-                editStudent.id = stu.id;
-                editStudent.name = stu.name;
-                editStudent.role = stu.role;
-                editStudent.phone = stu.phone;
-            };
-
-            const deleteStudent = (id) => {
-                if (id === '2610801') return alert('体验账号不能删除！');
-                if (confirm(`确定删除学号为 ${id} 的学生吗？`)) {
-                    delete db.students[id];
-                    saveDB();
-                    alert('删除成功');
-                }
-            };
-
-            const deletePunishment = (studentId, recordId) => {
-                if (!confirm('确定要删除这条处分记录吗？删除后不可恢复。')) return;
-                
-                const student = db.students[studentId];
-                if (student && student.punishments) {
-                    const index = student.punishments.findIndex(p => p.id === recordId);
-                    if (index !== -1) {
-                        student.punishments.splice(index, 1);
-                        saveDB();
-                        alert('处分记录已删除！');
-                    } else {
-                        alert('未找到该处分记录，可能数据已过期，请刷新重试。');
-                    }
-                }
-            };
-
-            const addPunishment = () => {
-                if (!punishForm.studentId || !punishForm.reason || !punishForm.penalty || !punishForm.date) return alert('请填写完整处分信息');
-                if (punishForm.level === '学校处分' && !punishForm.issuer) return alert('请选择作出处分的学校管理机构');
-
-                if (!db.students[punishForm.studentId].punishments) {
-                    db.students[punishForm.studentId].punishments = [];
-                }
-                
-                db.students[punishForm.studentId].punishments.push({
-                    id: Date.now(),
-                    reason: punishForm.reason,
-                    penalty: punishForm.penalty,
-                    date: punishForm.date,
-                    level: punishForm.level,
-                    issuer: punishForm.level === '学校处分' ? punishForm.issuer : '班主任/班级'
-                });
-                
-                saveDB();
-                alert(`【${punishForm.level}】已录入！`);
-                
-                punishForm.studentId = '';
-                punishForm.level = '班级处分';
-                punishForm.issuer = '';
-                punishForm.reason = '';
-                punishForm.penalty = '';
-                punishForm.date = new Date().toISOString().split('T')[0];
-            };
-
-            const addTeacherPunishment = () => {
-                if (!teacherPunishForm.studentId || !teacherPunishForm.reason || !teacherPunishForm.date) return alert('请填写完整班级处分信息');
-                
+            // ================= 录入处分 =================
+            const addTeacherPunishment = async () => {
+                if (!teacherPunishForm.studentId || !teacherPunishForm.reason) return alert('请填写完整班级处分信息');
                 let finalPenalty = teacherPunishForm.penaltyType;
                 if (teacherPunishForm.penaltyType === '自定义') {
                     if (!teacherPunishForm.customPenalty) return alert('请输入自定义处罚措施');
                     finalPenalty = teacherPunishForm.customPenalty;
                 }
-
-                if (!db.students[teacherPunishForm.studentId].punishments) {
-                    db.students[teacherPunishForm.studentId].punishments = [];
-                }
-                
-                db.students[teacherPunishForm.studentId].punishments.push({
-                    id: Date.now(),
+                const { error } = await dbClient.from('punishments').insert({
+                    student_id: teacherPunishForm.studentId,
                     reason: teacherPunishForm.reason,
                     penalty: finalPenalty,
                     date: teacherPunishForm.date,
                     level: '班级处分',
                     issuer: '班主任/班级'
                 });
-                
-                saveDB();
+                if (error) return alert('录入失败：' + error.message);
+                await fetchData();
                 alert('班级处分已录入！');
-                
-                teacherPunishForm.studentId = '';
-                teacherPunishForm.reason = '';
-                teacherPunishForm.penaltyType = '抬水';
-                teacherPunishForm.customPenalty = '';
-                teacherPunishForm.date = new Date().toISOString().split('T')[0];
+                teacherPunishForm.studentId = ''; teacherPunishForm.reason = '';
             };
 
-            const openPasswordModal = () => {
-                pwdForm.oldPwd = '';
-                pwdForm.newPwd = '';
-                pwdForm.confirmPwd = '';
-                showPasswordModal.value = true;
+            const deletePunishment = async (studentId, recordId) => {
+                if (!confirm('确定要删除这条处分记录吗？')) return;
+                await dbClient.from('punishments').delete().eq('id', recordId);
+                await fetchData();
             };
 
-            const closePasswordModal = () => {
-                showPasswordModal.value = false;
-            };
-
-            const submitPasswordChange = () => {
-                if (!pwdForm.oldPwd || !pwdForm.newPwd || !pwdForm.confirmPwd) return alert('请填写完整信息');
-                if (pwdForm.oldPwd !== currentUser.pwd) return alert('原密码错误！');
-                if (pwdForm.newPwd.length < 6) return alert('新密码长度至少为6位！');
-                if (pwdForm.newPwd !== pwdForm.confirmPwd) return alert('两次输入的新密码不一致！');
-
-                if (userType.value === 'student') {
-                    if (db.students[currentUser.id]) {
-                        db.students[currentUser.id].pwd = pwdForm.newPwd;
-                    }
-                } else if (userType.value === 'teacher') {
-                    if (db.teachers[currentUser.id]) {
-                        db.teachers[currentUser.id].pwd = pwdForm.newPwd;
-                    }
-                }
-                saveDB();
-                currentUser.pwd = pwdForm.newPwd;
-
-                alert('密码修改成功！请牢记新密码。');
-                closePasswordModal();
-            };
-
-            const showUpdateInfoTip = () => {
-                alert('请联系班主任或管理员修改');
-            };
-
-            const addOrUpdateSchedule = () => {
+            // ================= 课表管理 =================
+            const addOrUpdateSchedule = async () => {
                 if (!scheduleForm.course || !scheduleForm.teacher) return alert('请填写完整课程和教师信息');
-                
                 if (editScheduleIndex.value === -1) {
-                    scheduleData.value.push({ 
-                        day: scheduleForm.day, 
-                        course: scheduleForm.course, 
-                        teacher: scheduleForm.teacher 
-                    });
+                    await dbClient.from('schedule').insert({ day: scheduleForm.day, course: scheduleForm.course, teacher: scheduleForm.teacher });
                 } else {
-                    scheduleData.value[editScheduleIndex.value] = { 
-                        day: scheduleForm.day, 
-                        course: scheduleForm.course, 
-                        teacher: scheduleForm.teacher 
-                    };
+                    await dbClient.from('schedule').update({ day: scheduleForm.day, course: scheduleForm.course, teacher: scheduleForm.teacher }).eq('id', scheduleData.value[editScheduleIndex.value].id);
                     editScheduleIndex.value = -1;
                 }
-                saveScheduleData();
-                scheduleForm.course = '';
-                scheduleForm.teacher = '';
+                await fetchData();
+                scheduleForm.course = ''; scheduleForm.teacher = '';
                 alert('课表保存成功！');
             };
-
+            const deleteSchedule = async (index) => {
+                if (confirm('确定删除此课程吗？')) {
+                    await dbClient.from('schedule').delete().eq('id', scheduleData.value[index].id);
+                    await fetchData();
+                }
+            };
             const editSchedule = (index) => {
                 editScheduleIndex.value = index;
                 const item = scheduleData.value[index];
-                scheduleForm.day = item.day;
-                scheduleForm.course = item.course;
-                scheduleForm.teacher = item.teacher;
+                scheduleForm.day = item.day; scheduleForm.course = item.course; scheduleForm.teacher = item.teacher;
             };
+            const cancelEditSchedule = () => { editScheduleIndex.value = -1; scheduleForm.day = '周一'; scheduleForm.course = ''; scheduleForm.teacher = ''; };
 
-            const cancelEditSchedule = () => {
-                editScheduleIndex.value = -1;
-                scheduleForm.day = '周一';
-                scheduleForm.course = '';
-                scheduleForm.teacher = '';
-            };
-
-            const deleteSchedule = (index) => {
-                if (confirm('确定删除此课程吗？')) {
-                    scheduleData.value.splice(index, 1);
-                    saveScheduleData();
-                    alert('删除成功');
-                }
-            };
-
-            const createExam = () => {
+            // ================= 成绩管理 =================
+            const createExam = async () => {
                 if (!examForm.name || !examForm.date) return alert('请填写考试名称和时间');
                 if (examForm.selectedSubjects.length === 0) return alert('请至少选择一门考试科目');
-                
                 const newExam = {
                     id: 'exam_' + Date.now(),
                     name: examForm.name,
@@ -1255,72 +685,54 @@
                     subjects: [...examForm.selectedSubjects],
                     scores: {}
                 };
-                
-                exams.value.push(newExam);
-                saveExams();
-                
+                const { error } = await dbClient.from('exams').insert(newExam);
+                if (error) return alert('创建失败：' + error.message);
+                await fetchData();
                 selectedExamId.value = newExam.id;
                 initScoreEntry();
-                
-                examForm.name = '';
-                examForm.date = new Date().toISOString().split('T')[0];
-                examForm.selectedSubjects = [];
-                
-                alert('考试创建成功，请开始录入成绩！');
+                examForm.name = ''; examForm.selectedSubjects = [];
+                alert('考试创建成功！');
             };
-
-            const deleteExam = (id) => {
+            const deleteExam = async (id) => {
                 if (confirm('确定删除此考试及其所有成绩吗？')) {
-                    exams.value = exams.value.filter(e => e.id !== id);
-                    saveExams();
+                    await dbClient.from('exams').delete().eq('id', id);
+                    await fetchData();
                     if (selectedExamId.value === id) selectedExamId.value = '';
-                    alert('考试已删除');
                 }
             };
-
-            const selectExam = (id) => {
-                selectedExamId.value = id;
-                initScoreEntry();
-            };
-
+            const selectExam = (id) => { selectedExamId.value = id; initScoreEntry(); };
             const initScoreEntry = () => {
                 Object.keys(scoreEntryData).forEach(k => delete scoreEntryData[k]);
                 if (selectedExam.value) {
-                    Object.keys(db.students).forEach(stuId => {
-                        scoreEntryData[stuId] = {};
+                    studentList.value.forEach(stu => {
+                        scoreEntryData[stu.student_id] = {};
                         selectedExam.value.subjects.forEach(sub => {
-                            const existingScore = selectedExam.value.scores && selectedExam.value.scores[stuId] ? selectedExam.value.scores[stuId][sub] : '';
-                            scoreEntryData[stuId][sub] = existingScore !== undefined ? existingScore : '';
+                            const existingScore = selectedExam.value.scores && selectedExam.value.scores[stu.student_id] ? selectedExam.value.scores[stu.student_id][sub] : '';
+                            scoreEntryData[stu.student_id][sub] = existingScore !== undefined ? existingScore : '';
                         });
                     });
                 }
             };
-
-            const saveScores = () => {
+            const saveScores = async () => {
                 if (!selectedExam.value) return alert('请先选择考试');
+                let updatedScores = { ...selectedExam.value.scores };
                 let count = 0;
                 Object.keys(scoreEntryData).forEach(stuId => {
-                    if (db.students[stuId]) {
-                        if (!selectedExam.value.scores[stuId]) selectedExam.value.scores[stuId] = {};
-                        Object.keys(scoreEntryData[stuId]).forEach(sub => {
-                            const val = scoreEntryData[stuId][sub];
-                            if (val !== '' && !isNaN(val)) {
-                                selectedExam.value.scores[stuId][sub] = Number(val);
-                                count++;
-                            } else {
-                                delete selectedExam.value.scores[stuId][sub];
-                            }
-                        });
-                    }
+                    if (!updatedScores[stuId]) updatedScores[stuId] = {};
+                    Object.keys(scoreEntryData[stuId]).forEach(sub => {
+                        const val = scoreEntryData[stuId][sub];
+                        if (val !== '' && !isNaN(val)) { updatedScores[stuId][sub] = Number(val); count++; }
+                        else { delete updatedScores[stuId][sub]; }
+                    });
                 });
-                saveExams();
+                const { error } = await dbClient.from('exams').update({ scores: updatedScores }).eq('id', selectedExam.value.id);
+                if (error) return alert('保存失败：' + error.message);
+                await fetchData();
                 alert(`成绩保存成功！共录入/更新 ${count} 条成绩记录。`);
             };
-
             const handleScoreUpload = (event) => {
                 const file = event.target.files[0];
                 if (!file || !selectedExam.value) return alert('请先选择考试');
-                
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     try {
@@ -1328,59 +740,70 @@
                         const workbook = XLSX.read(data, { type: 'array' });
                         const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                         const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-                        
                         if (jsonData.length < 2) return alert('Excel 文件没有数据行');
-                        
                         const headers = jsonData[0].map(h => String(h).trim());
                         let successCount = 0;
-                        
                         for (let i = 1; i < jsonData.length; i++) {
                             const row = jsonData[i];
                             if (row && row[0]) {
                                 const id = String(row[0]).trim();
-                                if (db.students[id]) {
+                                if (studentList.value.find(s => s.student_id === id)) {
                                     if (!scoreEntryData[id]) scoreEntryData[id] = {};
                                     headers.forEach((header, colIndex) => {
                                         if (selectedExam.value.subjects.includes(header)) {
                                             const score = row[colIndex];
-                                            if (score !== undefined && score !== '') {
-                                                scoreEntryData[id][header] = Number(score);
-                                                successCount++;
-                                            }
+                                            if (score !== undefined && score !== '') { scoreEntryData[id][header] = Number(score); successCount++; }
                                         }
                                     });
                                 }
                             }
                         }
-                        alert(`Excel 解析成功！已按表头导入 ${successCount} 条成绩，请核对后点击“保存本次成绩”。`);
+                        alert(`已导入 ${successCount} 条成绩，请点击“保存本次成绩”。`);
                         event.target.value = '';
-                    } catch (error) {
-                        alert('文件解析失败，请确保格式正确。第一行必须为表头（包含科目名称），第一列为学号。');
-                        console.error(error);
-                    }
+                    } catch (error) { alert('文件解析失败！'); console.error(error); }
                 };
                 reader.readAsArrayBuffer(file);
             };
+            const toggleExamExpand = (examId) => { expandedExams.value[examId] = !expandedExams.value[examId]; };
 
-            const toggleExamExpand = (examId) => {
-                expandedExams.value[examId] = !expandedExams.value[examId];
+            // ================= 通用 =================
+            const showUpdateInfoTip = () => alert('请联系班主任或管理员修改');
+            const openPasswordModal = () => { pwdForm.oldPwd = ''; pwdForm.newPwd = ''; pwdForm.confirmPwd = ''; showPasswordModal.value = true; };
+            const closePasswordModal = () => showPasswordModal.value = false;
+            const submitPasswordChange = async () => {
+                if (!pwdForm.oldPwd || !pwdForm.newPwd || !pwdForm.confirmPwd) return alert('请填写完整信息');
+                if (pwdForm.newPwd.length < 6) return alert('新密码长度至少为6位！');
+                if (pwdForm.newPwd !== pwdForm.confirmPwd) return alert('两次输入的新密码不一致！');
+                // 在真实项目中，修改密码需要重新登录验证，这里简化处理
+                alert('密码修改功能需在 Supabase 后台完成，或使用重置密码邮件。当前版本暂仅支持前端演示。');
+                closePasswordModal();
             };
 
+            // 启动时自动检查是否已登录
+            onMounted(async () => {
+                const { data: { session } } = await dbClient.auth.getSession();
+                if (session) {
+                    const { data: profile } = await dbClient.from('profiles').select('*').eq('id', session.user.id).single();
+                    if (profile) {
+                        Object.assign(currentUser, profile);
+                        currentPage.value = profile.role === '学生' ? 'dashboard' : 'teacher-dashboard';
+                        await fetchData();
+                    }
+                }
+            });
+
             return {
-                currentPage, userType, dashboardTab, teacherTab, adminTab,
-                loginForm, adminForm, regForm, verifyCodeInput, newNotice, editStudent, punishForm, teacherPunishForm,
-                currentUser, studentList, scheduleData, noticeData, groupedSchedule,
-                allPunishments, classPunishments,
-                handleLogin, handleAdminLogin, handleLogout,
-                handleRegister, simulateSendCode, handleVerify,
-                publishNotice, deleteNotice, handleFileUpload,
-                saveStudent, editStudentData, deleteStudent, addPunishment, addTeacherPunishment,
-                deletePunishment,
-                showPasswordModal, pwdForm, openPasswordModal, closePasswordModal, submitPasswordChange,
-                showUpdateInfoTip,
-                scheduleForm, editScheduleIndex, addOrUpdateSchedule, editSchedule, cancelEditSchedule, deleteSchedule,
-                allSubjects, examForm, exams, selectedExamId, selectedExam, scoreEntryData, myExams, expandedExams,
-                createExam, deleteExam, selectExam, initScoreEntry, saveScores, handleScoreUpload, toggleExamExpand
+                currentPage, userType, dashboardTab, teacherTab, isLoading,
+                loginForm, adminForm, regForm, newNotice, editStudent, punishForm, teacherPunishForm,
+                scheduleForm, editScheduleIndex, allSubjects, examForm, selectedExamId, scoreEntryData, expandedExams,
+                showPasswordModal, pwdForm, currentUser,
+                studentList, notices, scheduleData, exams, allPunishments,
+                selectedExam, classPunishments, groupedSchedule, myExams,
+                handleLogin, handleRegister, handleLogout,
+                publishNotice, deleteNotice, addTeacherPunishment, deletePunishment,
+                addOrUpdateSchedule, deleteSchedule, editSchedule, cancelEditSchedule,
+                createExam, deleteExam, selectExam, saveScores, handleScoreUpload, toggleExamExpand,
+                showUpdateInfoTip, openPasswordModal, closePasswordModal, submitPasswordChange
             }
         }
     }).mount('#app');
