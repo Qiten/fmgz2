@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>桐乡市凤鸣高级中学工作台</title>
-    <!-- 引入 Supabase JS 和 Excel 解析库 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -86,14 +85,14 @@
             </div>
         </div>
 
-        <!-- 2. 管理员登录 (暂保持逻辑，后续可升级) -->
+        <!-- 2. 管理员登录 (修复了拼写错误) -->
         <div v-else-if="currentPage === 'admin-login'" key="admin-login" class="p-6 md:p-12 flex flex-col justify-center min-h-screen">
             <div class="text-center mb-8"><h1 class="text-2xl md:text-4xl font-bold text-[#1E40AF] tracking-widest">系统管理后台</h1></div>
             <div class="bg-white p-6 md:p-10 rounded-2xl shadow-md border border-blue-100 max-w-md mx-auto w-full">
                 <div class="mb-4"><label class="block text-gray-600 text-sm mb-2">管理员账号</label><input v-model="adminForm.username" type="text" placeholder="请输入管理员账号" class="w-full p-3 border rounded-lg focus:border-[#1E40AF]"></div>
                 <div class="mb-6"><label class="block text-gray-600 text-sm mb-2">密码</label><input v-model="adminForm.password" type="password" placeholder="请输入密码" class="w-full p-3 border rounded-lg focus:border-[#1E40AF]"></div>
-                <button @click="handleAdminLogin" class="w-full bg-[# :1E40AF] text-white py-3 rounded-lg font-bold ' hover:bg-blue-800 mb-4">text登录后台</button>
-                <div class="text-gray-center text-sm"><button @click="currentPage = 'login'" class="-text-[#1E40AF] font-bold">返回登录</button></div>
+                <button @click="handleAdminLogin" class="w-full bg-[#1E40AF] text-white py-3 rounded-lg font-bold hover:bg-blue-800 mb-4">登录后台</button>
+                <div class="text-center text-sm"><button @click="currentPage = 'login'" class="text-[#1E40AF] font-bold">返回登录</button></div>
             </div>
         </div>
 
@@ -110,8 +109,8 @@
             </div>
         </div>
 
-        <!-- 4. 邮箱验证页面 (Supabase 注册后需要去邮箱点链接，所以这个页面提示去邮箱) -->
-        <div v-else-if="currentPage === 'verify'" key="verify" class="p-6 md:p-12 flex500 flex-col justify-center min-h-screen">
+        <!-- 4. 邮箱验证页面 (修复了 flex500 错误) -->
+        <div v-else-if="currentPage === 'verify'" key="verify" class="p-6 md:p-12 flex flex-col justify-center min-h-screen">
             <div class="text-center mb-6">
                 <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce"><span class="text-[#1E40AF] text-2xl font-bold">@</span></div>
                 <h2 class="text-xl font-bold text-gray-800">验证您的邮箱</h2>
@@ -133,10 +132,11 @@
                     </div>
                     <button @click="handleLogout" class="md:hidden text-xs text-gray-500">退出登录</button>
                 </div>
+                <!-- 修复了成绩分析菜单栏的引号错误 -->
                 <div class="hidden md:flex items-center gap-6">
                     <span @click="dashboardTab='overview'" :class="dashboardTab==='overview' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF]'" class="cursor-pointer text-base">总览</span>
                     <span @click="dashboardTab='schedule'" :class="dashboardTab==='schedule' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF]'" class="cursor-pointer text-base">我的课表</span>
-                    <span @click="dashboardTab='grades'" :class="dashboardTab==='grades' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' hover:text-[#1E40AF]'" class="cursor-pointer text-base">成绩分析</span>
+                    <span @click="dashboardTab='grades'" :class="dashboardTab==='grades' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF]'" class="cursor-pointer text-base">成绩分析</span>
                     <span @click="dashboardTab='notices'" :class="dashboardTab==='notices' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF]'" class="cursor-pointer text-base">通知中心</span>
                     <span @click="dashboardTab='punishments'" :class="dashboardTab==='punishments' ? 'text-[#1E40AF] font-bold border-b-2 border-[#1E40AF] pb-1' : 'text-gray-500 hover:text-[#1E40AF]'" class="cursor-pointer text-base">个人处分</span>
                 </div>
@@ -271,7 +271,7 @@
             </Transition>
         </div>
 
-        <!-- 教师端主页 (结构与学生端类似，包含成绩管理、发布通知等) -->
+        <!-- 教师端主页 -->
         <div v-else-if="currentPage === 'teacher-dashboard'" key="teacher-dashboard" class="min-h-screen md:min-h-[90vh] pb-20 flex flex-col w-full">
             <div class="bg-white px-4 py-3 md:px-8 md:py-4 flex flex-col md:flex-row justify-between items-center border-b border-gray-100 shadow-sm sticky top-0 z-50 md:rounded-t-3xl">
                 <div class="flex items-center gap-2 md:gap-4 w-full md:w-auto justify-between md:justify-start">
@@ -433,7 +433,7 @@
 
     </Transition>
 
-    <!-- 修改密码模态框 (Supabase 的修改密码需要验证旧密码) -->
+    <!-- 修改密码模态框 -->
     <Transition name="page-fade">
         <div v-if="showPasswordModal" class="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
             <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-xl">
@@ -543,7 +543,6 @@
                 if (!loginForm.username || !loginForm.password) return alert('请输入账号和密码');
                 isLoading.value = true;
                 
-                // 因为 Supabase Auth 默认用邮箱，我们前端拼接虚拟邮箱：学号@fmhs.com
                 const email = `${loginForm.username}@fmhs.com`;
                 
                 const { data, error } = await dbClient.auth.signInWithPassword({ email, password: loginForm.password });
@@ -551,7 +550,6 @@
 
                 if (error) return alert('登录失败：' + error.message);
 
-                // 获取用户资料
                 const { data: profile } = await dbClient.from('profiles').select('*').eq('id', data.user.id).single();
                 if (profile) {
                     Object.assign(currentUser, profile);
@@ -560,7 +558,7 @@
                     } else {
                         currentPage.value = 'dashboard';
                     }
-                    await fetchData(); // 登录成功后拉取所有数据
+                    await fetchData();
                 } else {
                     alert('找不到用户资料，请联系管理员');
                 }
@@ -571,14 +569,13 @@
                 if (!regForm.name || !regForm.id || !regForm.email) return alert('请填写完整信息');
                 isLoading.value = true;
 
-                const email = `${regForm.id}@fmhs.com`; // 使用学号作为账号邮箱
-                const { data, error } = await dbClient.auth.signUp({ email, password: '123456' }); // 默认密码 123456
+                const email = `${regForm.id}@fmhs.com`;
+                const { data, error } = await dbClient.auth.signUp({ email, password: '123456' });
                 isLoading.value = false;
 
                 if (error) return alert('注册失败：' + error.message);
 
                 if (data.user) {
-                    // 将资料写入 profiles 表
                     const { error: profileError } = await dbClient.from('profiles').insert({
                         id: data.user.id,
                         student_id: regForm.id,
@@ -590,7 +587,7 @@
                     if (profileError) return alert('资料写入失败：' + profileError.message);
                 }
                 
-                currentPage.value = 'verify'; // 跳转到邮箱验证提示页
+                currentPage.value = 'verify';
             };
 
             // ================= 退出登录 =================
@@ -610,7 +607,7 @@
                 });
                 if (error) return alert('发布失败：' + error.message);
                 newNotice.title = ''; newNotice.content = '';
-                await fetchData(); // 重新拉取通知
+                await fetchData();
                 alert('通知发布成功！');
             };
 
@@ -774,7 +771,6 @@
                 if (!pwdForm.oldPwd || !pwdForm.newPwd || !pwdForm.confirmPwd) return alert('请填写完整信息');
                 if (pwdForm.newPwd.length < 6) return alert('新密码长度至少为6位！');
                 if (pwdForm.newPwd !== pwdForm.confirmPwd) return alert('两次输入的新密码不一致！');
-                // 在真实项目中，修改密码需要重新登录验证，这里简化处理
                 alert('密码修改功能需在 Supabase 后台完成，或使用重置密码邮件。当前版本暂仅支持前端演示。');
                 closePasswordModal();
             };
