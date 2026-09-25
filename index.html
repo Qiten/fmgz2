@@ -598,8 +598,33 @@
             const openPasswordModal = () => { pwdForm.oldPwd = ''; pwdForm.newPwd = ''; pwdForm.confirmPwd = ''; showPasswordModal.value = true; };
             const closePasswordModal = () => showPasswordModal.value = false;
             const submitPasswordChange = async () => {
-                showToast('密码修改功能需在 Supabase 后台完成。');
-                closePasswordModal();
+                if (!pwdForm.oldPwd || !pwdForm.newPwd || !pwdForm.confirmPwd) return showToast('请填写完整信息', 'error');
+                if (pwdForm.newPwd.length < 6) return showToast('新密码长度至少为6位！', 'error');
+                if (pwdForm.newPwd !== pwdForm.confirmPwd) return showToast('两次输入的新密码不一致！', 'error');
+                
+                isLoading.value = true;
+                try {
+                    const email = `${currentUser.student_id}@fmhs.com`;
+                    
+                    // 1. 验证旧密码（用旧密码重新登录一次）
+                    const { error: signInError } = await dbClient.auth.signInWithPassword({ email, password: pwdForm.oldPwd });
+                    if (signInError) {
+                        isLoading.value = false;
+                        return showToast('原密码错误，请重试！', 'error');
+                    }
+                    
+                    // 2. 更新为新密码
+                    const { error: updateError } = await dbClient.auth.updateUser({ password: pwdForm.newPwd });
+                    isLoading.value = false;
+                    
+                    if (updateError) return showToast('修改失败：' + updateError.message, 'error');
+                    
+                    showToast('密码修改成功！请牢记新密码。', 'success');
+                    closePasswordModal();
+                } catch (err) {
+                    isLoading.value = false;
+                    showToast('网络异常，请稍后重试。', 'error');
+                }
             };
 
             onMounted(async () => {
