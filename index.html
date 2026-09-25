@@ -202,9 +202,13 @@ createApp({
             return groups;
         });
         const myPunishments = computed(() => {
-    if (!currentUser.student_id) return [];
-    return allPunishments.value.filter(p => p.student_id === currentUser.student_id);
-});
+            if (!currentUser.id) return [];
+            // 同时匹配学号和UUID，并强制转为字符串防止类型不匹配
+            return allPunishments.value.filter(p => 
+                String(p.student_id) === String(currentUser.student_id) || 
+                String(p.student_id) === String(currentUser.id)
+            );
+        });
 
         const myExams = computed(() => {
             if (!currentUser.id) return [];
