@@ -25,7 +25,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
 .tab-slide-leave-active{transition:all 0.25s cubic-bezier(0.5,0,0.5,1)}
 .tab-slide-enter-from{opacity:0;transform:translateX(25px)}
 .tab-slide-leave-to{opacity:0;transform:translateX(-25px)}
-.tab-slide-enter-to,.tab-slide-leave-from{transform:translateX(0)}
 .date-input{width:100%;box-sizing:border-box;min-width:0}
 </style>
 </head>
@@ -233,10 +232,8 @@ createApp({
                 if (er.data) exams.value = er.data;
                 if (pur.data) {
                     allPunishments.value = pur.data.map(p => ({ ...p, studentName: p.student_name, studentId: p.student_id, recordId: p.id }));
-                    
-                    // 【关键修复】只要当前登录的是学生，自动帮他把自己的处分找出来，塞进他的个人资料里
                     if (currentUser.id) {
-                        currentUser.punishments = allPunishments.value.filter(p => p.student_id === currentUser.student_id);
+                        currentUser.punishments = allPunishments.value.filter(p => p.student_id === currentUser.student_id || p.student_id === currentUser.id);
                     }
                 }
             } catch (e) { console.error(e); }
@@ -459,9 +456,12 @@ createApp({
                 if (!teacherPunishForm.customPenalty) return showToast('请输入自定义处罚措施');
                 fp = teacherPunishForm.customPenalty;
             }
+            const targetStudent = allUsers.value.find(u => u.id === teacherPunishForm.studentId);
+            const studentRealId = targetStudent ? targetStudent.student_id : teacherPunishForm.studentId;
+
             const { error } = await dbClient.from('punishments').insert({
-                student_id: teacherPunishForm.studentId,
-                student_name: allUsers.value.find(u => u.id === teacherPunishForm.studentId)?.name || '未知',
+                student_id: studentRealId,
+                student_name: targetStudent?.name || '未知',
                 reason: teacherPunishForm.reason, penalty: fp, date: teacherPunishForm.date,
                 level: '班级处分', issuer: '班主任/班级'
             });
@@ -474,9 +474,13 @@ createApp({
         const addPunishment = async () => {
             if (!punishForm.studentId || !punishForm.reason || !punishForm.penalty || !punishForm.date) return showToast('请填写完整处分信息');
             if (punishForm.level === '学校处分' && !punishForm.issuer) return showToast('请选择作出处分的学校管理机构');
+            
+            const targetStudent = allUsers.value.find(u => u.id === punishForm.studentId);
+            const studentRealId = targetStudent ? targetStudent.student_id : punishForm.studentId;
+
             const { error } = await dbClient.from('punishments').insert({
-                student_id: punishForm.studentId,
-                student_name: allUsers.value.find(u => u.id === punishForm.studentId)?.name || '未知',
+                student_id: studentRealId,
+                student_name: targetStudent?.name || '未知',
                 reason: punishForm.reason, penalty: punishForm.penalty, date: punishForm.date,
                 level: punishForm.level, issuer: punishForm.level === '学校处分' ? punishForm.issuer : '班主任/班级'
             });
@@ -550,7 +554,7 @@ createApp({
             currentPage, dashboardTab, teacherTab, adminTab, isLoading,
             loginForm, adminForm, regForm, newNotice, showPasswordModal, pwdForm, currentUser,
             allUsers, studentList, notices, scheduleData, exams, allPunishments, pendingTeachers,
-            groupedSchedule, myExams, expandedExams, classPunishments, myPunishments,selectedExamId, selectedExam, scoreEntryData,
+            groupedSchedule, myExams, expandedExams, classPunishments, myPunishments, selectedExamId, selectedExam, scoreEntryData,
             examForm, allSubjects, teacherPunishForm, punishForm,
             toastMessage, toastType, showEditModal, editStudentForm,
             handleLogin, handleAdminLogin, handleRegister, handleLogout,
