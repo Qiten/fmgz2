@@ -459,9 +459,13 @@ createApp({
                 if (!teacherPunishForm.customPenalty) return showToast('请输入自定义处罚措施');
                 fp = teacherPunishForm.customPenalty;
             }
+            // 核心修复：查找出真正的学号，而不是用UUID
+            const targetStudent = allUsers.value.find(u => u.id === teacherPunishForm.studentId);
+            const studentRealId = targetStudent ? targetStudent.student_id : teacherPunishForm.studentId;
+
             const { error } = await dbClient.from('punishments').insert({
-                student_id: teacherPunishForm.studentId,
-                student_name: allUsers.value.find(u => u.id === teacherPunishForm.studentId)?.name || '未知',
+                student_id: studentRealId,
+                student_name: targetStudent?.name || '未知',
                 reason: teacherPunishForm.reason, penalty: fp, date: teacherPunishForm.date,
                 level: '班级处分', issuer: '班主任/班级'
             });
@@ -474,9 +478,14 @@ createApp({
         const addPunishment = async () => {
             if (!punishForm.studentId || !punishForm.reason || !punishForm.penalty || !punishForm.date) return showToast('请填写完整处分信息');
             if (punishForm.level === '学校处分' && !punishForm.issuer) return showToast('请选择作出处分的学校管理机构');
+            
+            // 核心修复：查找出真正的学号
+            const targetStudent = allUsers.value.find(u => u.id === punishForm.studentId);
+            const studentRealId = targetStudent ? targetStudent.student_id : punishForm.studentId;
+
             const { error } = await dbClient.from('punishments').insert({
-                student_id: punishForm.studentId,
-                student_name: allUsers.value.find(u => u.id === punishForm.studentId)?.name || '未知',
+                student_id: studentRealId,
+                student_name: targetStudent?.name || '未知',
                 reason: punishForm.reason, penalty: punishForm.penalty, date: punishForm.date,
                 level: punishForm.level, issuer: punishForm.level === '学校处分' ? punishForm.issuer : '班主任/班级'
             });
@@ -484,12 +493,6 @@ createApp({
             await fetchData();
             showToast('处分已录入！', 'success');
             punishForm.studentId = ''; punishForm.reason = ''; punishForm.penalty = '';
-        };
-
-        const deletePunishment = async (sid, rid) => {
-            if (!confirm('确定要删除这条处分记录吗？')) return;
-            await dbClient.from('punishments').delete().eq('id', rid);
-            await fetchData();
         };
 
         const toggleExamExpand = (id) => { expandedExams.value[id] = !expandedExams.value[id]; };
