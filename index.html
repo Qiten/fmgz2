@@ -202,6 +202,10 @@ createApp({
             scheduleData.value.forEach(item => { if (groups[item.day]) groups[item.day].push(item); });
             return groups;
         });
+        const myPunishments = computed(() => {
+    if (!currentUser.student_id) return [];
+    return allPunishments.value.filter(p => p.student_id === currentUser.student_id);
+});
 
         const myExams = computed(() => {
             if (!currentUser.id) return [];
