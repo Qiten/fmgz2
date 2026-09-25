@@ -1,9 +1,0 @@
-{
-  "rewrites": [
-    {
-      "source": "/",
-      "has": [{ "type": "host", "value": "doc.ltxcloud.dpdns.org" }],
-      "destination": "/doc.html"
-    }
-  ]
-}
