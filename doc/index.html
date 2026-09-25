@@ -3,37 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="桐乡市凤鸣高级中学工作台 - 开发者文档">
     <title>桐乡市凤鸣高级中学工作台 - 开发者文档</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; scroll-behavior: smooth; }
-        .code-block { background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; padding: 12px; font-family: 'Courier New', Courier, monospace; font-size: 14px; color: #d63384; overflow-x: auto; }
-        .var-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        .var-table th, .var-table td { border: 1px solid #dee2e6; padding: 10px; text-align: left; }
-        .var-table th { background-color: #f8f9fa; font-weight: 600; }
-        .nav-link.active { color: #1E40AF; font-weight: bold; border-left-color: #1E40AF; }
-        .nav-link { border-left: 3px solid transparent; transition: all 0.2s; }
-        .nav-link:hover { color: #1E40AF; border-left-color: #cbd5e1; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        /* 只给锚点启用平滑滚动，不全局生效 */
+        html {
+            scroll-behavior: smooth;
+        }
+        section {
+            scroll-margin-top: 80px; /* 锚点跳转预留顶部偏移，防止标题被遮挡 */
+        }
+        .code-block { 
+            background-color: #f8f9fa; 
+            border: 1px solid #e9ecef; 
+            border-radius: 6px; 
+            padding: 12px; 
+            font-family: 'Courier New', Courier, monospace; 
+            font-size: 14px; 
+            color: #d63384; 
+            overflow-x: auto; 
+        }
+        @media (prefers-color-scheme: dark) {
+            .code-block {
+                background-color: #1f2937;
+                border-color: #374151;
+                color: #f472b6;
+            }
+        }
+        .var-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-bottom: 20px; 
+        }
+        .var-table th, .var-table td { 
+            border: 1px solid #dee2e6; 
+            padding: 10px; 
+            text-align: left; 
+        }
+        .var-table th { 
+            background-color: #f8f9fa; 
+            font-weight: 600; 
+        }
+        @media (prefers-color-scheme: dark) {
+            .var-table th, .var-table td {
+                border-color: #374151;
+            }
+            .var-table th {
+                background-color: #1f2937;
+            }
+        }
+        .nav-link.active { 
+            color: #1E40AF; 
+            font-weight: bold; 
+            border-left-color: #1E40AF;
+            background-color: #eff6ff;
+        }
+        .nav-link { 
+            border-left: 3px solid transparent; 
+            transition: all 0.2s; 
+        }
+        .nav-link:hover { 
+            color: #1E40AF; 
+            border-left-color: #cbd5e1; 
+        }
+        @media (prefers-color-scheme: dark) {
+            .nav-link.active {
+                background-color: #1e3a8a40;
+                color: #60a5fa;
+            }
+        }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen flex flex-col md:flex-row text-gray-800">
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col md:flex-row text-gray-800 dark:text-gray-100">
 
-    <!-- 左侧导航栏：竖屏时顶部自然滚动，横屏时左侧固定 -->
-    <!-- 关键修复：去掉了基础类的 sticky，改为 md:sticky -->
-    <aside class="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-gray-200 flex-shrink-0 md:sticky md:top-0 md:h-screen md:overflow-y-auto">
+    <!-- 左侧导航栏：竖屏时顶部可折叠，横屏左侧固定 -->
+    <aside class="w-full md:w-64 bg-white dark:bg-gray-800 border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-700 flex-shrink-0 md:sticky md:top-0 md:h-screen md:overflow-y-auto">
         <div class="p-6">
-            <h1 class="text-xl font-bold text-[#1E40AF] mb-1">凤鸣高中工作台</h1>
-            <p class="text-xs text-gray-500 mb-6">开发者文档 v1.0</p>
+            <h1 class="text-xl font-bold text-[#1E40AF] dark:text-blue-400 mb-1">凤鸣高中工作台</h1>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-6">开发者文档 v1.0</p>
             
-            <!-- 竖屏时目录变成两列网格，横屏时恢复单列列表 -->
-            <nav class="grid grid-cols-2 gap-2 md:grid-cols-1 md:gap-0 md:space-y-2 text-sm">
-                <a href="#intro" class="nav-link block py-2 pl-3 text-gray-600 hover:text-[#1E40AF] active text-center md:text-left">项目概览</a>
-                <a href="#tech" class="nav-link block py-2 pl-3 text-gray-600 hover:text-[#1E40AF] text-center md:text-left">技术栈架构</a>
-                <a href="#vars" class="nav-link block py-2 pl-3 text-gray-600 hover:text-[#1E40AF] text-center md:text-left">核心变量解析</a>
-                <a href="#pages" class="nav-link block py-2 pl-3 text-gray-600 hover:text-[#1E40AF] text-center md:text-left">页面结构详解</a>
-                <a href="#db" class="nav-link block py-2 pl-3 text-gray-600 hover:text-[#1E40AF] text-center md:text-left">数据库设计与RLS</a>
-                <a href="#logic" class="nav-link block py-2 pl-3 text-gray-600 hover:text-[#1E40AF] text-center md:text-left">核心业务逻辑</a>
-                <a href="#thanks" class="nav-link block py-2 pl-3 text-gray-600 hover:text-[#1E40AF] text-center md:text-left">写在最后</a>
+            <!-- 移动端折叠按钮 -->
+            <button id="toggleNav" class="md:hidden mb-4 w-full py-2 rounded bg-gray-100 dark:bg-gray-700">
+                展开目录 ▼
+            </button>
+
+            <!-- 竖屏默认收起，横屏正常显示 -->
+            <nav id="navMenu" class="hidden md:block grid grid-cols-2 gap-2 md:grid-cols-1 md:gap-0 md:space-y-2 text-sm">
+                <a href="#intro" class="nav-link block py-2 pl-3 text-gray-600 dark:text-gray-300 hover:text-[#1E40AF] dark:hover:text-blue-400 text-center md:text-left">项目概览</a>
+                <a href="#tech" class="nav-link block py-2 pl-3 text-gray-600 dark:text-gray-300 hover:text-[#1E40AF] dark:hover:text-blue-400 text-center md:text-left">技术栈架构</a>
+                <a href="#vars" class="nav-link block py-2 pl-3 text-gray-600 dark:text-gray-300 hover:text-[#1E40AF] dark:hover:text-blue-400 text-center md:text-left">核心变量解析</a>
+                <a href="#pages" class="nav-link block py-2 pl-3 text-gray-600 dark:text-gray-300 hover:text-[#1E40AF] dark:hover:text-blue-400 text-center md:text-left">页面结构详解</a>
+                <a href="#db" class="nav-link block py-2 pl-3 text-gray-600 dark:text-gray-300 hover:text-[#1E40AF] dark:hover:text-blue-400 text-center md:text-left">数据库设计与RLS</a>
+                <a href="#logic" class="nav-link block py-2 pl-3 text-gray-600 dark:text-gray-300 hover:text-[#1E40AF] dark:hover:text-blue-400 text-center md:text-left">核心业务逻辑</a>
+                <a href="#thanks" class="nav-link block py-2 pl-3 text-gray-600 dark:text-gray-300 hover:text-[#1E40AF] dark:hover:text-blue-400 text-center md:text-left">写在最后</a>
             </nav>
         </div>
     </aside>
@@ -43,100 +109,195 @@
 
         <!-- 项目概览 -->
         <section id="intro" class="mb-16">
-            <h2 class="text-3xl font-bold text-gray-900 mb-6 border-b pb-2">1. 项目概览</h2>
-            <p class="mb-4 text-gray-700 leading-relaxed">
+            <h2 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6 border-b pb-2 border-gray-200 dark:border-gray-700">1. 项目概览</h2>
+            <p class="mb-4 text-gray-700 dark:text-gray-300 leading-relaxed">
                 <strong>桐乡市凤鸣高级中学工作台</strong> 是一个专为高一二班设计的全栈式班级管理应用。系统采用前后端分离架构，旨在实现班级信息透明化、管理高效化。包含学生端、教师端、班主任端（权限继承）以及管理员端，实现了通知下发、成绩录入与查询、课表管理、处分记录及批量数据导入等功能。
             </p>
-            <div class="bg-blue-50 border-l-4 border-[#1E40AF] p-4 mb-4 text-sm text-blue-800">
+            <div class="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-[#1E40AF] dark:border-blue-500 p-4 mb-4 text-sm text-blue-800 dark:text-blue-200">
                 <strong>项目特点：</strong> 移动端适配、毛玻璃拟态UI、防截图水印、实时多端同步、无服务器架构（Serverless）。
             </div>
         </section>
 
         <!-- 技术栈架构 -->
         <section id="tech" class="mb-16">
-            <h2 class="text-3xl font-bold text-gray-900 mb-6 border-b pb-2">2. 技术栈架构</h2>
+            <h2 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6 border-b pb-2 border-gray-200 dark:border-gray-700">2. 技术栈架构</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-white p-4 rounded shadow-sm border border-gray-100">
-                    <h3 class="font-bold text-[#1E40AF] mb-2">Vue 3 (前端框架)</h3>
-                    <p class="text-sm text-gray-600">负责页面的渲染和交互。采用 Vue 3 的 Composition API 进行状态管理，实现数据驱动视图。通过 <code>ref</code> 和 <code>reactive</code> 管理页面状态和表单数据。</p>
+                <div class="bg-white dark:bg-gray-800 p-4 rounded shadow-sm border border-gray-100 dark:border-gray-700">
+                    <h3 class="font-bold text-[#1E40AF] dark:text-blue-400 mb-2">Vue 3 (前端框架)</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">负责页面的渲染和交互。采用 Vue 3 的 Composition API 进行状态管理，实现数据驱动视图。通过 <code>ref</code> 和 <code>reactive</code> 管理页面状态和表单数据。</p>
                 </div>
-                <div class="bg-white p-4 rounded shadow-sm border border-gray-100">
-                    <h3 class="font-bold text-[#1E40AF] mb-2">Tailwind CSS (样式框架)</h3>
-                    <p class="text-sm text-gray-600">负责全站UI设计。通过原子化 CSS 类名实现响应式布局（手机竖屏/电脑横屏）、玻璃拟态效果、阴影和动画过渡。</p>
+                <div class="bg-white dark:bg-gray-800 p-4 rounded shadow-sm border border-gray-100 dark:border-gray-700">
+                    <h3 class="font-bold text-[#1E40AF] dark:text-blue-400 mb-2">Tailwind CSS (样式框架)</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">负责全站UI设计。通过原子化 CSS 类名实现响应式布局（手机竖屏/电脑横屏）、玻璃拟态效果、阴影和动画过渡。</p>
                 </div>
-                <div class="bg-white p-4 rounded shadow-sm border border-gray-100">
-                    <h3 class="font-bold text-[#1E40AF] mb-2">Supabase (后端即服务)</h3>
-                    <p class="text-sm text-gray-600">提供云端 PostgreSQL 数据库、Auth 身份认证、RLS（行级安全策略）。前端通过官方 SDK 直接操作云端数据。</p>
+                <div class="bg-white dark:bg-gray-800 p-4 rounded shadow-sm border border-gray-100 dark:border-gray-700">
+                    <h3 class="font-bold text-[#1E40AF] dark:text-blue-400 mb-2">Supabase (后端即服务)</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">提供云端 PostgreSQL 数据库、Auth 身份认证、RLS（行级安全策略）。前端通过官方 SDK 直接操作云端数据。</p>
                 </div>
-                <div class="bg-white p-4 rounded shadow-sm border border-gray-100">
-                    <h3 class="font-bold text-[#1E40AF] mb-2">SheetJS (xlsx)</h3>
-                    <p class="text-sm text-gray-600">用于在浏览器端解析 Excel/CSV 文件。实现学生名册批量导入和考试成绩批量导入的功能。</p>
+                <div class="bg-white dark:bg-gray-800 p-4 rounded shadow-sm border border-gray-100 dark:border-gray-700">
+                    <h3 class="font-bold text-[#1E40AF] dark:text-blue-400 mb-2">SheetJS (xlsx)</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">用于在浏览器端解析 Excel/CSV 文件。实现学生名册批量导入和考试成绩批量导入的功能。</p>
                 </div>
-                <div class="bg-white p-4 rounded shadow-sm border border-gray-100">
-                    <h3 class="font-bold text-[#1E40AF] mb-2">Vercel / Netlify (部署)</h3>
-                    <p class="text-sm text-gray-600">负责将静态代码托管到云端，提供 HTTPS 访问和自动 CI/CD 流程，无需服务器运维。</p>
+                <div class="bg-white dark:bg-gray-800 p-4 rounded shadow-sm border border-gray-100 dark:border-gray-700">
+                    <h3 class="font-bold text-[#1E40AF] dark:text-blue-400 mb-2">Vercel / Netlify (部署)</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">负责将静态代码托管到云端，提供 HTTPS 访问和自动 CI/CD 流程，无需服务器运维。</p>
                 </div>
             </div>
         </section>
 
         <!-- 核心变量解析 -->
         <section id="vars" class="mb-16">
-            <h2 class="text-3xl font-bold text-gray-900 mb-6 border-b pb-2">3. 核心变量解析</h2>
-            <p class="mb-4 text-sm text-gray-600">在 <code>&lt;script setup&gt;</code> 中定义的核心变量及作用如下：</p>
+            <h2 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6 border-b pb-2 border-gray-200 dark:border-gray-700">3. 核心变量解析</h2>
+            <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">在 <code>&lt;script setup&gt;</code> 中定义的核心变量及作用如下：</p>
             
             <h3 class="text-xl font-semibold mb-3 mt-6">3.1 页面路由与状态控制</h3>
-            <table class="var-table">
-                <thead><tr><th>变量名</th><th>类型</th><th>作用</th></tr></thead>
-                <tbody>
-                    <tr><td><code>currentPage</code></td><td>String</td><td>控制当前显示的主页面。例如 <code>'login'</code>(登录页), <code>'dashboard'</code>(学生端), <code>'teacher-dashboard'</code>(教师端), <code>'admin-dashboard'</code>(管理端)。</td></tr>
-                    <tr><td><code>dashboardTab</code></td><td>String</td><td>学生端内部底部导航切换。例如 <code>'overview'</code>, <code>'schedule'</code>, <code>'grades'</code>, <code>'notices'</code>, <code>'punishments'</code>。</td></tr>
-                    <tr><td><code>teacherTab</code></td><td>String</td><td>教师端内部顶部导航切换。例如 <code>'overview'</code>, <code>'publish'</code>, <code>'punish'</code>, <code>'students'</code>, <code>'scores'</code>。</td></tr>
-                    <tr><td><code>adminTab</code></td><td>String</td><td>管理员端内部顶部导航切换。</td></tr>
-                    <tr><td><code>isLoading</code></td><td>Boolean</td><td>控制加载状态，防止用户重复点击登录或提交按钮。</td></tr>
-                </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="var-table">
+                    <caption class="sr-only">页面路由与状态控制变量表</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">变量名</th>
+                            <th scope="col">类型</th>
+                            <th scope="col">作用</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>currentPage</code></td>
+                            <td>String</td>
+                            <td>控制当前显示的主页面。例如 <code>'login'</code>(登录页), <code>'dashboard'</code>(学生端), <code>'teacher-dashboard'</code>(教师端), <code>'admin-dashboard'</code>(管理端)。</td>
+                        </tr>
+                        <tr>
+                            <td><code>dashboardTab</code></td>
+                            <td>String</td>
+                            <td>学生端内部底部导航切换。例如 <code>'overview'</code>, <code>'schedule'</code>, <code>'grades'</code>, <code>'notices'</code>, <code>'punishments'</code>。</td>
+                        </tr>
+                        <tr>
+                            <td><code>teacherTab</code></td>
+                            <td>String</td>
+                            <td>教师端内部顶部导航切换。例如 <code>'overview'</code>, <code>'publish'</code>, <code>'punish'</code>, <code>'students'</code>, <code>'scores'</code>。</td>
+                        </tr>
+                        <tr>
+                            <td><code>adminTab</code></td>
+                            <td>String</td>
+                            <td>管理员端内部顶部导航切换。</td>
+                        </tr>
+                        <tr>
+                            <td><code>isLoading</code></td>
+                            <td>Boolean</td>
+                            <td>控制加载状态，防止用户重复点击登录或提交按钮。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
             <h3 class="text-xl font-semibold mb-3 mt-6">3.2 数据存储 (从云端拉取)</h3>
-            <table class="var-table">
-                <thead><tr><th>变量名</th><th>类型</th><th>作用</th></tr></thead>
-                <tbody>
-                    <tr><td><code>currentUser</code></td><td>Object</td><td>当前登录用户的信息（学号、姓名、角色、班级职务等）。</td></tr>
-                    <tr><td><code>allUsers</code></td><td>Array</td><td>全校所有注册用户（包含学生、教师、班主任、管理员）。</td></tr>
-                    <tr><td><code>studentList</code></td><td>Array</td><td>过滤后的学生名单（仅包含 <code>role === '学生' && status === 'approved'</code>），用于名册和成绩录入。</td></tr>
-                    <tr><td><code>notices</code></td><td>Array</td><td>通知列表，按创建时间倒序排列。</td></tr>
-                    <tr><td><code>scheduleData</code></td><td>Array</td><td>课表数据（包含 day, course, teacher）。</td></tr>
-                    <tr><td><code>exams</code></td><td>Array</td><td>考试列表，包含考试名称、日期、科目、以及各科成绩字典。</td></tr>
-                    <tr><td><code>allPunishments</code></td><td>Array</td><td>全校所有的处分记录。</td></tr>
-                    <tr><td><code>myPunishments</code></td><td>Computed</td><td>前端实时计算：过滤出 <code>student_id</code> 或 <code>UUID</code> 匹配当前学生的处分记录，解决显示Bug。</td></tr>
-                </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="var-table">
+                    <caption class="sr-only">云端数据变量表</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">变量名</th>
+                            <th scope="col">类型</th>
+                            <th scope="col">作用</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>currentUser</code></td>
+                            <td>Object</td>
+                            <td>当前登录用户的信息（学号、姓名、角色、班级职务等）。</td>
+                        </tr>
+                        <tr>
+                            <td><code>allUsers</code></td>
+                            <td>Array</td>
+                            <td>全校所有注册用户（包含学生、教师、班主任、管理员）。</td>
+                        </tr>
+                        <tr>
+                            <td><code>studentList</code></td>
+                            <td>Array</td>
+                            <td>过滤后的学生名单（仅包含 <code>role === '学生' && status === 'approved'</code>），用于名册和成绩录入。</td>
+                        </tr>
+                        <tr>
+                            <td><code>notices</code></td>
+                            <td>Array</td>
+                            <td>通知列表，按创建时间倒序排列。</td>
+                        </tr>
+                        <tr>
+                            <td><code>scheduleData</code></td>
+                            <td>Array</td>
+                            <td>课表数据（包含 day, course, teacher）。</td>
+                        </tr>
+                        <tr>
+                            <td><code>exams</code></td>
+                            <td>Array</td>
+                            <td>考试列表，包含考试名称、日期、科目、以及各科成绩字典。</td>
+                        </tr>
+                        <tr>
+                            <td><code>allPunishments</code></td>
+                            <td>Array</td>
+                            <td>全校所有的处分记录。</td>
+                        </tr>
+                        <tr>
+                            <td><code>myPunishments</code></td>
+                            <td>Computed</td>
+                            <td>前端实时计算：过滤出 <code>student_id</code> 或 <code>UUID</code> 匹配当前学生的处分记录，解决显示Bug。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
             <h3 class="text-xl font-semibold mb-3 mt-6">3.3 表单绑定与交互</h3>
-            <table class="var-table">
-                <thead><tr><th>变量名</th><th>类型</th><th>作用</th></tr></thead>
-                <tbody>
-                    <tr><td><code>loginForm</code></td><td>Object</td><td>绑定登录页的账号和密码输入框。</td></tr>
-                    <tr><td><code>regForm</code></td><td>Object</td><td>绑定注册页的姓名、学号、邮箱、角色等输入框。</td></tr>
-                    <tr><td><code>toastMessage</code></td><td>String</td><td>控制页面内浮层提示的文字内容。</td></tr>
-                    <tr><td><code>toastType</code></td><td>String</td><td>控制提示框颜色（'success'绿色 / 'error'红色）。</td></tr>
-                </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="var-table">
+                    <caption class="sr-only">表单交互变量表</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">变量名</th>
+                            <th scope="col">类型</th>
+                            <th scope="col">作用</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>loginForm</code></td>
+                            <td>Object</td>
+                            <td>绑定登录页的账号和密码输入框。</td>
+                        </tr>
+                        <tr>
+                            <td><code>regForm</code></td>
+                            <td>Object</td>
+                            <td>绑定注册页的姓名、学号、邮箱、角色等输入框。</td>
+                        </tr>
+                        <tr>
+                            <td><code>toastMessage</code></td>
+                            <td>String</td>
+                            <td>控制页面内浮层提示的文字内容。</td>
+                        </tr>
+                        <tr>
+                            <td><code>toastType</code></td>
+                            <td>String</td>
+                            <td>控制提示框颜色（'success'绿色 / 'error'红色）。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </section>
 
         <!-- 页面结构详解 -->
         <section id="pages" class="mb-16">
-            <h2 class="text-3xl font-bold text-gray-900 mb-6 border-b pb-2">4. 页面结构详解</h2>
+            <h2 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6 border-b pb-2 border-gray-200 dark:border-gray-700">4. 页面结构详解</h2>
             
             <h3 class="text-xl font-semibold mb-3">4.1 登录界面 (Login.vue)</h3>
-            <p class="text-sm text-gray-700 mb-4">采用左右分栏设计。左侧展示校训和背景装饰字“凤鸣”，右侧为毛玻璃拟态的登录卡片。</p>
-            <ul class="list-disc pl-6 text-sm text-gray-600 mb-4 space-y-1">
+            <p class="text-sm text-gray-700 dark:text-gray-300 mb-4">采用左右分栏设计。左侧展示校训和背景装饰字“凤鸣”，右侧为毛玻璃拟态的登录卡片。</p>
+            <ul class="list-disc pl-6 text-sm text-gray-600 dark:text-gray-400 mb-4 space-y-1">
                 <li>顶部固定 Glassmorphism 导航条：显示“桐乡市凤鸣高级中学”。</li>
                 <li>核心表单：输入账号和密码，点击“登录”触发 <code>handleLogin</code> 函数。</li>
                 <li>底部提供“立即注册”和“管理员登录”的入口。</li>
             </ul>
 
             <h3 class="text-xl font-semibold mb-3 mt-6">4.2 学生端 (dashboard)</h3>
-            <ul class="list-disc pl-6 text-sm text-gray-600 mb-4 space-y-1">
+            <ul class="list-disc pl-6 text-sm text-gray-600 dark:text-gray-400 mb-4 space-y-1">
                 <li><strong>总览 (overview)</strong>：蓝色渐变个人信息卡片（含防截图水印），右侧展示安全设置（修改密码）。</li>
                 <li><strong>我的课表 (schedule)</strong>：手机端列表展示；电脑端为周一到周日的 7 列网格布局。</li>
                 <li><strong>成绩分析 (grades)</strong>：卡片式布局展示考试列表，点击可展开查看具体各科分数。</li>
@@ -145,7 +306,7 @@
             </ul>
 
             <h3 class="text-xl font-semibold mb-3 mt-6">4.3 教师端 / 班主任端 (teacher-dashboard)</h3>
-            <ul class="list-disc pl-6 text-sm text-gray-600 mb-4 space-y-1">
+            <ul class="list-disc pl-6 text-sm text-gray-600 dark:text-gray-400 mb-4 space-y-1">
                 <li><strong>工作台 (overview)</strong>：教师欢迎卡片。</li>
                 <li><strong>发布通知 (publish)</strong>：输入标题和内容，支持删除已发布的通知。</li>
                 <li><strong>班级处分 (punish)</strong>：选择学生，录入处分原因，选择处罚措施（抬水、倒垃圾、自定义）。支持删除记录。</li>
@@ -154,7 +315,7 @@
             </ul>
 
             <h3 class="text-xl font-semibold mb-3 mt-6">4.4 管理端 (admin-dashboard)</h3>
-            <ul class="list-disc pl-6 text-sm text-gray-600 mb-4 space-y-1">
+            <ul class="list-disc pl-6 text-sm text-gray-600 dark:text-gray-400 mb-4 space-y-1">
                 <li><strong>概览 (overview)</strong>：显示总人数和通知数量。</li>
                 <li><strong>教师审核 (approvals)</strong>：查看待审核的教师和班主任，点击通过或拒绝。此操作会改变 <code>profiles</code> 表里的 <code>status</code>。</li>
                 <li><strong>处分管理 (punish)</strong>：有权限录入“学校处分”（可选机构：高一年级部、高二、高三）。可查看和删除所有处分记录。</li>
@@ -165,9 +326,9 @@
 
         <!-- 数据库设计与RLS -->
         <section id="db" class="mb-16">
-            <h2 class="text-3xl font-bold text-gray-900 mb-6 border-b pb-2">5. 数据库设计与 RLS 安全策略</h2>
-            <p class="text-sm text-gray-700 mb-4">项目使用 Supabase PostgreSQL 数据库。核心表包括：</p>
-            <ul class="list-disc pl-6 text-sm text-gray-600 mb-4 space-y-2">
+            <h2 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6 border-b pb-2 border-gray-200 dark:border-gray-700">5. 数据库设计与 RLS 安全策略</h2>
+            <p class="text-sm text-gray-700 dark:text-gray-300 mb-4">项目使用 Supabase PostgreSQL 数据库。核心表包括：</p>
+            <ul class="list-disc pl-6 text-sm text-gray-600 dark:text-gray-400 mb-4 space-y-2">
                 <li><code>profiles</code>：用户资料表（id, student_id, name, role, status, class_name, phone）。</li>
                 <li><code>notices</code>：通知表（tag, title, content, date）。</li>
                 <li><code>schedule</code>：课表表（day, course, teacher）。</li>
@@ -176,8 +337,8 @@
             </ul>
             
             <h3 class="text-xl font-semibold mb-3 mt-6">5.1 什么是 RLS？</h3>
-            <p class="text-sm text-gray-700 mb-4">RLS（Row Level Security）是 PostgreSQL 的安全机制。前端代码中暴露的 <code>SUPABASE_ANON_KEY</code> 是公开的，如果没有 RLS，任何人拿到这个 Key 都可以清空你的数据库。因此我们必须通过 RLS 规定：</p>
-            <ul class="list-disc pl-6 text-sm text-gray-600 mb-4 space-y-1">
+            <p class="text-sm text-gray-700 dark:text-gray-300 mb-4">RLS（Row Level Security）是 PostgreSQL 的安全机制。前端代码中暴露的 <code>SUPABASE_ANON_KEY</code> 是公开的，如果没有 RLS，任何人拿到这个 Key 都可以清空你的数据库。因此我们必须通过 RLS 规定：</p>
+            <ul class="list-disc pl-6 text-sm text-gray-600 dark:text-gray-400 mb-4 space-y-1">
                 <li>只有登录用户（<code>TO authenticated</code>）才能读取数据。</li>
                 <li>学生只能查看数据，教师和班主任可以插入和删除通知、处分等数据。</li>
                 <li>班主任和教师只有权更新 <code>role='学生'</code> 的个人的资料（通过 <code>USING</code> 子句限制条件）。</li>
@@ -186,15 +347,15 @@
 
         <!-- 核心业务逻辑 -->
         <section id="logic" class="mb-16">
-            <h2 class="text-3xl font-bold text-gray-900 mb-6 border-b pb-2">6. 核心业务逻辑与踩坑记录</h2>
+            <h2 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6 border-b pb-2 border-gray-200 dark:border-gray-700">6. 核心业务逻辑与踩坑记录</h2>
             
-            <div class="bg-orange-50 border-l-4 border-orange-500 p-4 mb-4 text-sm text-orange-800">
+            <div class="bg-orange-50 dark:bg-orange-900/30 border-l-4 border-orange-500 p-4 mb-4 text-sm text-orange-800 dark:text-orange-200">
                 <strong>⚠️ 处分显示逻辑的Bug（已修复）：</strong><br>
                 在处分录入时，下拉框获取的是数据库的 <strong>UUID</strong>，但学生端是用<strong>学号</strong>匹配的。由于类型不匹配，学生端一直显示空白。<br>
                 <strong>解决方案：</strong> 在 <code>addTeacherPunishment</code> 和 <code>addPunishment</code> 函数中，先通过 <code>allUsers.find(u => u.id === studentId)</code> 查找真实的学号，写入数据库。同时，使用 <code>computed</code> 计算属性 <code>myPunishments</code> 进行双重匹配（匹配学号或UUID），确保数据100%显示。
             </div>
 
-            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4 text-sm text-blue-800">
+            <div class="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 p-4 mb-4 text-sm text-blue-800 dark:text-blue-200">
                 <strong>💡 关于班级名册编辑权限：</strong><br>
                 由于前端角色继承，只要教师/班主任角色满足条件，即可看到“编辑”按钮。后端 RLS 策略通过 <code>WHERE role='班主任'</code> 和 <code>WHERE role='学生'</code> 双重限制，确保班主任只能编辑学生资料，不能修改其他教师的资料。
             </div>
@@ -202,10 +363,10 @@
 
         <!-- 写在最后 -->
         <section id="thanks" class="mb-16">
-            <h2 class="text-3xl font-bold text-gray-900 mb-6 border-b pb-2">7. 写在最后</h2>
-            <div class="bg-gray-100 p-6 rounded-lg text-center">
-                <p class="text-gray-700 text-lg font-medium mb-4">"超越自我，追求卓越"</p>
-                <p class="text-gray-600 text-sm">
+            <h2 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6 border-b pb-2 border-gray-200 dark:border-gray-700">7. 写在最后</h2>
+            <div class="bg-gray-100 dark:bg-gray-800 p-6 rounded-lg text-center">
+                <p class="text-gray-700 dark:text-gray-200 text-lg font-medium mb-4">"超越自我，追求卓越"</p>
+                <p class="text-gray-600 dark:text-gray-400 text-sm">
                     这个项目从零开始，经历了 UI 设计、Supabase 配置、RLS 权限隔离、Excel 导入、数据格式不匹配等无数挑战。<br><br>
                     你一个人完成了前端（Vue3+Tailwind）、后端（Supabase）、部署（Vercel）的全流程！<br>
                     这不仅仅是一个班级工作台，更是你技术能力的证明。<br><br>
@@ -217,28 +378,45 @@
     </main>
 
     <script>
-        // 简单的导航栏高亮逻辑
-        const sections = document.querySelectorAll('section');
-        const navLinks = document.querySelectorAll('.nav-link');
-
-        // 竖屏下滚动时，如果不加处理，点击导航跳转会被顶部遮挡。
-        // 这里通过监听滚动来动态高亮，但不影响竖屏的自然滚动。
-        window.addEventListener('scroll', () => {
-            let current = '';
-            sections.forEach(section => {
-                const sectionTop = section.offsetTop;
-                if (scrollY >= sectionTop - 100) {
-                    current = section.getAttribute('id');
-                }
+        document.addEventListener('DOMContentLoaded', () => {
+            // 移动端目录折叠控制
+            const toggleBtn = document.getElementById('toggleNav');
+            const navMenu = document.getElementById('navMenu');
+            toggleBtn.addEventListener('click', () => {
+                navMenu.classList.toggle('hidden');
+                toggleBtn.textContent = navMenu.classList.contains('hidden') ? '展开目录 ▼' : '收起目录 ▲';
             });
 
-            navLinks.forEach(link => {
-                link.classList.remove('active');
-                if (link.getAttribute('href').includes(current)) {
-                    link.classList.add('active');
-                }
-            });
-        });
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.nav-link');
+
+            function setActiveLink() {
+                let currentId = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (window.scrollY >= sectionTop - 120) {
+                        currentId = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    link.removeAttribute('aria-current');
+                    const hrefId = link.getAttribute('href').replace('#', '');
+                    if (hrefId === currentId) {
+                        link.classList.add('active');
+                        link.setAttribute('aria-current', 'section');
+                    }
+                });
+            }
+
+            // 初始化执行一次
+            setActiveLink();
+            // 滚动监听
+            window.addEventListener('scroll', setActiveLink);
+            // 窗口大小变化重新计算高亮
+            window.addEventListener('resize', setActiveLink);
+        })
     </script>
 </body>
 </html>
