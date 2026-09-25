@@ -286,15 +286,12 @@
             const toastMessage = ref('');
             const toastType = ref('success');
             const showToast = (msg, type = 'success') => {
-                toastMessage.value = msg;
-                toastType.value = (msg.includes('失败') || msg.includes('错误') || msg.includes('不能') || msg.includes('请输入') || msg.includes('警告')) ? 'error' : 'success';
-                setTimeout(() => { toastMessage.value = ''; }, 3000);
-            };
-
-            // 接收全局 alert 劫持事件
-            window.addEventListener('show-vue-toast', (e) => {
-                showToast(e.detail, 'error');
-            });
+    toastMessage.value = msg;
+    // 修复：只要传入的类型是 error，就强制显示红色。如果是默认情况，再按文本智能判断。
+    const isError = type === 'error' || (msg && (msg.includes('失败') || msg.includes('错误') || msg.includes('不能') || msg.includes('请输入') || msg.includes('警告') || msg.includes('异常') || msg.includes('请先') || msg.includes('请填写')));
+    toastType.value = isError ? 'error' : 'success';
+    setTimeout(() => { toastMessage.value = ''; }, 3000);
+};
 
             const loginForm = reactive({ username: '', password: '' });
             const adminForm = reactive({ username: '', password: '' });
