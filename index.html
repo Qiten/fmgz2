@@ -231,7 +231,14 @@ createApp({
                 if (nr.data) notices.value = nr.data;
                 if (sr.data) scheduleData.value = sr.data;
                 if (er.data) exams.value = er.data;
-                if (pur.data) allPunishments.value = pur.data.map(p => ({ ...p, studentName: p.student_name, studentId: p.student_id, recordId: p.id }));
+                if (pur.data) {
+                    allPunishments.value = pur.data.map(p => ({ ...p, studentName: p.student_name, studentId: p.student_id, recordId: p.id }));
+                    
+                    // 【关键修复】只要当前登录的是学生，自动帮他把自己的处分找出来，塞进他的个人资料里
+                    if (currentUser.id) {
+                        currentUser.punishments = allPunishments.value.filter(p => p.student_id === currentUser.student_id);
+                    }
+                }
             } catch (e) { console.error(e); }
         };
 
